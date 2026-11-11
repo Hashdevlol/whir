@@ -5,7 +5,8 @@ data/
 *.db-*
 .env
 .env.local
-.tide-node.json
+.whir-node.json
 .venv/
 __pycache__/
 .pytest_cache/
+.run/

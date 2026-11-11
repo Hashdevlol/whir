@@ -1,4 +1,4 @@
-import type { ChatMessage, Usage } from '@tide/shared';
+import type { ChatMessage, Usage } from '@whir/shared';
 
 export type MsgStatus = 'pending' | 'queued' | 'assigned' | 'streaming' | 'done' | 'error' | 'stopped';
 
@@ -27,7 +27,7 @@ export interface Conversation {
   updatedAt: number;
 }
 
-export const CHATS_KEY = 'tide_chats_v1';
+export const CHATS_KEY = 'whir_chats_v1';
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
 export function loadChats(): Conversation[] {

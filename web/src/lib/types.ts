@@ -1,4 +1,4 @@
-import type { PlanId } from '@tide/shared';
+import type { PlanId } from '@whir/shared';
 
 export interface PublicUser {
   id: string;

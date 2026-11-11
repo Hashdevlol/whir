@@ -50,7 +50,7 @@ export function createUser(kind: User['kind'], opts: { wallet?: string; name?: s
 const SESSION_TTL = 30 * 24 * 3600 * 1000;
 
 export function createSession(userId: string): string {
-  const token = `tide_s_${rand()}`;
+  const token = `whir_s_${rand()}`;
   db.prepare('INSERT INTO sessions(token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)').run(
     sha256(token), userId, now(), now() + SESSION_TTL,
   );
@@ -63,7 +63,7 @@ export function revokeSession(token: string) {
 
 // ---------- API keys / node tokens ----------
 export function createApiKey(userId: string, name?: string) {
-  const key = `sk-tide-${rand(24)}`;
+  const key = `sk-whir-${rand(24)}`;
   const id = randomUUID();
   db.prepare('INSERT INTO api_keys(id, user_id, key_hash, prefix, name, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(
     id, userId, sha256(key), key.slice(0, 12), name ?? null, now(),
@@ -91,14 +91,14 @@ export type Principal =
 export function resolveToken(token: string | undefined | null): Principal | null {
   if (!token) return null;
   token = token.replace(/^Bearer\s+/i, '').trim();
-  if (token.startsWith('tide_s_')) {
+  if (token.startsWith('whir_s_')) {
     const row = db.prepare('SELECT user_id, expires_at FROM sessions WHERE token_hash = ?').get(sha256(token)) as
       | { user_id: string; expires_at: number } | undefined;
     if (!row || row.expires_at < now()) return null;
     const user = getUser(row.user_id);
     return user ? { kind: 'session', user } : null;
   }
-  if (token.startsWith('sk-tide-')) {
+  if (token.startsWith('sk-whir-')) {
     const row = db.prepare('SELECT id, user_id FROM api_keys WHERE key_hash = ? AND revoked = 0').get(sha256(token)) as
       | { id: string; user_id: string } | undefined;
     if (!row) return null;
@@ -140,7 +140,7 @@ export function walletNonce(wallet: string): string {
 }
 
 export const signInMessage = (wallet: string, nonce: string) =>
-  `Sign in to Tide\n\nWallet: ${wallet}\nNonce: ${nonce}\n\nThis request will not trigger a transaction or cost any fees.`;
+  `Sign in to Whir\n\nWallet: ${wallet}\nNonce: ${nonce}\n\nThis request will not trigger a transaction or cost any fees.`;
 
 export function verifyWalletSignIn(wallet: string, nonce: string, signatureB58: string): boolean {
   const [expStr, mac] = nonce.split('.');

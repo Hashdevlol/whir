@@ -1,35 +1,32 @@
-/** Tide mark: "≈" — two waves with square-cut ends on a sharp black tile. Works from 16px to 800px. */
-export function LogoMark({ size = 30, invert = false }: { size?: number; invert?: boolean }) {
-  const bg = invert ? '#EFEDE6' : '#0C0C0C';
-  const fg = invert ? '#0C0C0C' : '#FFFFFF';
+const BLADE = 'M50 50 C 46.5 40.5, 50.5 28.5, 65 22 C 64.5 33.5, 60.5 43, 50 50Z';
+
+/** The three white blades of the Whir fan, on a 100×100 grid centred at 50,50. */
+export function Blades({ fill = '#FFFFFF' }: { fill?: string }) {
   return (
-    <svg viewBox="0 0 32 32" width={size} height={size} aria-hidden="true" shapeRendering="geometricPrecision">
-      <rect width="32" height="32" fill={bg} />
-      <g fill="none" stroke={fg} strokeWidth="3.4" strokeLinecap="butt" strokeLinejoin="miter">
-        <path d="M5 13.2c3.2-4.4 7.2-4.4 11 0s7.8 4.4 11 0" />
-        <path d="M5 21.2c3.2-4.4 7.2-4.4 11 0s7.8 4.4 11 0" />
-      </g>
+    <>
+      {[0, 120, 240].map((r) => <path key={r} d={BLADE} transform={`rotate(${r} 50 50)`} fill={fill} />)}
+    </>
+  );
+}
+
+/** Whir mark: a black fan disc with three white blades. `spin` = the node is running. */
+export function LogoMark({ size = 22, invert = false, spin = false }: { size?: number; invert?: boolean; spin?: boolean }) {
+  const disc = invert ? '#FFFFFF' : '#1D1D1F';
+  const blade = invert ? '#1D1D1F' : '#FFFFFF';
+  return (
+    <svg viewBox="10 10 80 80" width={size} height={size} aria-hidden="true" className="mark-svg">
+      <circle cx="50" cy="50" r="40" fill={disc} />
+      <g className={spin ? 'blades spinning' : 'blades'}><Blades fill={blade} /></g>
     </svg>
   );
 }
 
-/** Faceless node mascot: a GPU chip with pins and the ≈ badge. `lit` = serving right now. */
-export function NodeMascot({ lit = true, className }: { lit?: boolean; className?: string }) {
-  const body = lit ? '#19E57F' : '#C9C6BD';
-  const pins = [22, 34, 46, 58, 70];
+/** Wordmark lockup: mark + "whir" set in Inter Display. */
+export function Wordmark({ size = 22, invert = false }: { size?: number; invert?: boolean }) {
   return (
-    <svg className={className} viewBox="0 0 96 110" aria-hidden="true">
-      {pins.map((x) => <rect key={'t' + x} x={x} y="6" width="4" height="12" fill="#0C0C0C" />)}
-      {pins.map((x) => <rect key={'b' + x} x={x} y="84" width="4" height="12" fill="#0C0C0C" />)}
-      {[30, 44, 58].map((y) => <rect key={'l' + y} x="4" y={y} width="12" height="4" fill="#0C0C0C" />)}
-      {[30, 44, 58].map((y) => <rect key={'r' + y} x="80" y={y} width="12" height="4" fill="#0C0C0C" />)}
-      <rect x="14" y="16" width="68" height="70" fill={body} stroke="#0C0C0C" strokeWidth="4" />
-      <rect x="36" y="38" width="24" height="24" fill="#0C0C0C" />
-      <g fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="butt">
-        <path d="M40 47.5c2.4-3.2 5.3-3.2 8 0s5.6 3.2 8 0" />
-        <path d="M40 53.5c2.4-3.2 5.3-3.2 8 0s5.6 3.2 8 0" />
-      </g>
-      <ellipse cx="48" cy="104" rx="26" ry="3.5" fill="#0C0C0C" opacity=".18" />
-    </svg>
+    <span className="wordmark" style={{ fontSize: size * 1.3, gap: size * 0.3 }}>
+      <LogoMark size={size} invert={invert} />
+      <span>whir</span>
+    </span>
   );
 }

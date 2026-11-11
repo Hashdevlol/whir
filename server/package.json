@@ -12,7 +12,7 @@
   "dependencies": {
     "@solana/spl-token": "^0.4.15",
     "@solana/web3.js": "^1.99.0",
-    "@tide/shared": "*",
+    "@whir/shared": "*",
     "bs58": "^6.0.0",
     "express": "^5.1.0",
     "socket.io": "^4.8.1"

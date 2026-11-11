@@ -1,7 +1,7 @@
 [project]
-name = "tide-current"
+name = "whir-current"
 version = "0.0.0"
-description = "Current: Tide's sharded inference engine (fork of leyten/shard): one model, split across a swarm of consumer gpus"
+description = "Current: Whir's sharded inference engine (fork of leyten/shard): one model, split across a swarm of consumer gpus"
 requires-python = ">=3.11"
 dependencies = [
     # wire security (phase 0): authenticated encryption for the inter-stage transport

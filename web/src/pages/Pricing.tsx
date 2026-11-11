@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CREDITS_PER_USD_PURCHASED, PLANS, PRICE_IN_PER_M_USD, PRICE_OUT_PER_M_USD } from '@tide/shared';
+import { CREDITS_PER_USD_PURCHASED, PLANS, PRICE_IN_PER_M_USD, PRICE_OUT_PER_M_USD } from '@whir/shared';
 import { useAuth } from '../lib/auth';
 import { Footer } from '../components/Nav';
 import { fmtInt } from '../lib/format';
@@ -17,7 +17,7 @@ const FAQ = [
   ['Do unused grant credits roll over?', 'No — the daily grant resets every day at 00:00 UTC. Credits you buy never expire.'],
   ['Why is pay-as-you-go more expensive than plans?', '$1 buys 500 credits pay-as-you-go ($0.002 each), while plans work out much cheaper per credit if you use them. Plans are the cheap path; pay-as-you-go is the flexible one.'],
   ['How am I charged if I stop an answer early?', 'Credits are held up front for the worst case, then settled to the exact tokens delivered. If nothing was generated, you are refunded in full.'],
-  ['Where does my money go?', 'Node operators receive 70% of what you pay for the tokens their GPUs generate. If someone referred you, they get 5%. The rest keeps Tide running: the orchestrator, free daily credits and development.'],
+  ['Where does my money go?', 'Node operators receive 70% of what you pay for the tokens their GPUs generate. If someone referred you, they get 5%. The rest keeps Whir running: the orchestrator, free daily credits and development.'],
   ['Are my prompts stored?', 'No. Prompts and outputs are streamed through the orchestrator to a node and back, and never written to our database. Chat history lives only in your browser.'],
   ['How do I pay?', 'Payments are in USDC on Solana. Checkout is rolling out now; until then local/dev builds can activate plans and add test credits from Settings.'],
 ];
@@ -33,7 +33,7 @@ export default function Pricing() {
     <>
       <div className="page wrap">
         <div className="page-head center" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div className="eyebrow">pricing</div>
+          <div className="kicker">Pricing</div>
           <h1>Pay for tokens, <em>not</em> data centers.</h1>
           <p>Every plan includes a daily credit grant. Need more? Buy credits that never expire.</p>
         </div>
@@ -45,7 +45,7 @@ export default function Pricing() {
               <div key={p.id} className={`card plan${featured ? ' glow' : ''}`}>
                 <div className="row-between">
                   <span className="eyebrow">{p.name}</span>
-                  {featured && <span className="badge foam">popular</span>}
+                  
                   {currentPlan === p.id && <span className="badge sky">current</span>}
                 </div>
                 <div className="price">${p.priceUsd}<small> / month</small></div>

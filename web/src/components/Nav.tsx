@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { LogoMark } from './Logo';
+import { LogoMark, Wordmark } from './Logo';
 import { useAuth } from '../lib/auth';
 
 export const NAV_LINKS = [
   { to: '/chat', label: 'Chat' },
   { to: '/create', label: 'Create' },
+  { to: '/docs', label: 'API' },
   { to: '/earn', label: 'Earn' },
   { to: '/pricing', label: 'Pricing' },
-  { to: '/network', label: 'Network' },
-  { to: '/docs', label: 'Docs' },
 ];
 
 export function AccountButton({ compact = false }: { compact?: boolean }) {
@@ -17,31 +16,38 @@ export function AccountButton({ compact = false }: { compact?: boolean }) {
   if (loading) return <span className="btn btn-ghost btn-sm" style={{ opacity: 0.4 }}>…</span>;
   if (!signedIn) {
     return (
-      <button className={`btn ${compact ? 'btn-ghost' : 'btn-foam'} btn-sm`} onClick={() => openSignIn()}>
+      <button className={`btn ${compact ? 'btn-quiet' : 'btn-ink'} btn-sm`} onClick={() => openSignIn()}>
         Sign in
       </button>
     );
   }
   return (
     <Link to="/settings#account" className="acct-chip" title="Account settings">
-      <span className="avatar" />
-      <span className="name mono">{me!.user.name ?? 'Account'}</span>
+      <span className="avatar">{(me!.user.name ?? 'A').slice(0, 1).toUpperCase()}</span>
+      <span className="name">{me!.user.name ?? 'Account'}</span>
     </Link>
   );
 }
 
 export function Nav({ full = false }: { full?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const loc = useLocation();
+  const home = loc.pathname === '/';
   useEffect(() => setOpen(false), [loc.pathname, loc.hash]);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 8);
+    on();
+    window.addEventListener('scroll', on, { passive: true });
+    return () => window.removeEventListener('scroll', on);
+  }, []);
 
   return (
     <>
-      <nav className={`nav${full ? ' full' : ''}`}>
+      <nav className={`nav${full ? ' full' : ''}${scrolled || !home ? ' scrolled' : ''}${open ? ' open' : ''}`}>
         <div className="wrap">
-          <Link className="brand" to="/" aria-label="Tide home">
-            <LogoMark />
-            Tide
+          <Link className="brand" to="/" aria-label="Whir home">
+            <Wordmark size={20} />
           </Link>
           <div className="nav-links">
             {NAV_LINKS.map((l) => (
@@ -49,8 +55,8 @@ export function Nav({ full = false }: { full?: boolean }) {
             ))}
           </div>
           <div className="nav-actions">
-            {loc.pathname === '/' && <Link to="/chat" className="btn btn-ink btn-sm hide-sm">Open chat →</Link>}
-            <AccountButton compact={loc.pathname === '/'} />
+            <AccountButton compact />
+            {home && <Link to="/chat" className="btn btn-ink btn-sm hide-sm">Get started</Link>}
             <button className="menu-btn" onClick={() => setOpen((o) => !o)} aria-label="Menu" aria-expanded={open}>
               <span />
             </button>
@@ -59,10 +65,10 @@ export function Nav({ full = false }: { full?: boolean }) {
       </nav>
       {open && (
         <div className="mobile-menu">
-          {NAV_LINKS.map((l) => (
-            <NavLink key={l.to} to={l.to} className={({ isActive }) => (isActive ? 'active' : '')}>{l.label}</NavLink>
+          {NAV_LINKS.map((l, i) => (
+            <NavLink key={l.to} to={l.to} style={{ animationDelay: `${i * 35}ms` }} className={({ isActive }) => (isActive ? 'active' : '')}>{l.label}</NavLink>
           ))}
-          <NavLink to="/settings">Settings</NavLink>
+          <NavLink to="/settings" style={{ animationDelay: `${NAV_LINKS.length * 35}ms` }}>Settings</NavLink>
         </div>
       )}
     </>
@@ -75,16 +81,18 @@ export function Footer() {
       <div className="wrap">
         <div className="fgrid">
           <div>
-            <Link className="brand" to="/"><LogoMark invert />Tide</Link>
-            <p style={{ marginTop: 16, maxWidth: 300 }}>AI on everyone's GPUs. Open models, per-token pricing, nothing you type is stored.</p>
+            <Link className="brand" to="/" aria-label="Whir home"><Wordmark size={20} /></Link>
+            <p className="footer-blurb">AI served by everyday computers. Open models, priced per token. Nothing you type is stored.</p>
           </div>
-          <div><h5>USE</h5><ul><li><Link to="/chat">Chat</Link></li><li><Link to="/create">Create</Link></li><li><Link to="/pricing">Pricing</Link></li><li><Link to="/docs">API</Link></li></ul></div>
-          <div><h5>EARN</h5><ul><li><Link to="/earn">Run a node</Link></li><li><Link to="/docs#nodes">Node docs</Link></li><li><Link to="/settings#account">Referrals</Link></li></ul></div>
-          <div><h5>NETWORK</h5><ul><li><Link to="/network">Live stats</Link></li><li><Link to="/network#swarms">Swarms</Link></li><li><Link to="/network#economics">Payouts</Link></li></ul></div>
-          <div><h5>HELP</h5><ul><li><Link to="/pricing#faq">FAQ</Link></li><li><Link to="/settings#keys">API keys</Link></li><li><Link to="/settings">Settings</Link></li></ul></div>
+          <div><h5>Use</h5><ul><li><Link to="/chat">Chat</Link></li><li><Link to="/create">Create</Link></li><li><Link to="/pricing">Pricing</Link></li><li><Link to="/docs">API</Link></li></ul></div>
+          <div><h5>Earn</h5><ul><li><Link to="/earn">Run a node</Link></li><li><Link to="/docs#nodes">Node docs</Link></li><li><Link to="/settings#account">Referrals</Link></li></ul></div>
+          <div><h5>Network</h5><ul><li><Link to="/network">Live status</Link></li><li><Link to="/network#swarms">Swarms</Link></li><li><Link to="/network#economics">Payouts</Link></li></ul></div>
+          <div><h5>Help</h5><ul><li><Link to="/pricing#faq">FAQ</Link></li><li><Link to="/settings#keys">API keys</Link></li><li><Link to="/settings">Settings</Link></li></ul></div>
         </div>
-        <div className="footer-word" aria-hidden="true">Tide</div>
-        <div className="fine"><span>© 2026 TIDE. OPEN MODELS. NO PROMPTS STORED.</span><span>70% OF EVERY PAID TOKEN GOES TO THE GPU THAT MADE IT.</span></div>
+        <div className="fine">
+          <span className="row" style={{ gap: 8 }}><LogoMark size={14} /> © 2026 Whir</span>
+          <span>70% of every paid token goes to the computer that served it.</span>
+        </div>
       </div>
     </footer>
   );

@@ -7,10 +7,10 @@ const num = (v: string | undefined, d: number) => (v !== undefined && v !== '' &
 export const config = {
   port: num(env.PORT, 3001),
   host: env.HOST ?? '0.0.0.0',
-  dbPath: resolve(env.TIDE_DB ?? 'data/tide.db'),
+  dbPath: resolve(env.WHIR_DB ?? 'data/whir.db'),
   isProd: env.NODE_ENV === 'production',
   /** HMAC secret for anon tokens. Set it in production so tokens survive restarts. */
-  secret: env.TIDE_SECRET ?? randomBytes(32).toString('hex'),
+  secret: env.WHIR_SECRET ?? randomBytes(32).toString('hex'),
   allowDevCredits: env.ALLOW_DEV_CREDITS === 'true' || env.NODE_ENV !== 'production',
   webDist: resolve(env.WEB_DIST ?? '../web/dist'),
 

@@ -1,5 +1,5 @@
 {
-  "name": "tide",
+  "name": "whir",
   "private": true,
   "version": "0.1.0",
   "workspaces": ["shared", "server", "node", "web"],

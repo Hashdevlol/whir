@@ -13,7 +13,7 @@ import {
   getAccount, getMint, TokenAccountNotFoundError,
 } from '@solana/spl-token';
 import bs58 from 'bs58';
-import { PLANS, CREDITS_PER_USD_PURCHASED, type PlanId } from '@tide/shared';
+import { PLANS, CREDITS_PER_USD_PURCHASED, type PlanId } from '@whir/shared';
 import { db, now, tx } from './db.ts';
 import { finishPayout } from './billing.ts';
 import { getUser } from './auth.ts';

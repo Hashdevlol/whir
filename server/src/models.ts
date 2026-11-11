@@ -1,4 +1,4 @@
-import type { NodeType } from '@tide/shared';
+import type { NodeType } from '@whir/shared';
 import { config } from './config.ts';
 import type { SwarmModel } from './swarm.ts';
 
@@ -22,18 +22,18 @@ export const BROWSER_MODELS = ['Qwen3-4B-q4f16_1-MLC', 'Qwen3-1.7B-q4f16_1-MLC']
 
 export const CATALOG: ModelEntry[] = [
   {
-    id: 'tide-max',
-    name: 'Tide Max',
+    id: 'whir-max',
+    name: 'Whir Max',
     description: 'Flagship open model served by native GPU nodes. Thinking + tool calling.',
     nodeType: 'native',
-    nodeModels: ['tide-max', ...(process.env.TIDE_MAX_NODE_MODELS?.split(',').map((s) => s.trim()).filter(Boolean) ?? [])],
+    nodeModels: ['whir-max', ...(process.env.WHIR_MAX_NODE_MODELS?.split(',').map((s) => s.trim()).filter(Boolean) ?? [])],
     inputBudget: 12_000,
     outputCap: 4096,
     outputCapThink: 8192,
   },
   {
-    id: 'tide-lite',
-    name: 'Tide Lite',
+    id: 'whir-lite',
+    name: 'Whir Lite',
     description: 'Small fast model served by browser nodes over WebGPU.',
     nodeType: 'browser',
     nodeModels: BROWSER_MODELS,
@@ -42,8 +42,8 @@ export const CATALOG: ModelEntry[] = [
     outputCapThink: 2048,
   },
   {
-    id: 'tide-swarm',
-    name: 'Tide Swarm',
+    id: 'whir-swarm',
+    name: 'Whir Swarm',
     description: 'A frontier-size open model split layer-by-layer across community GPUs by Current. Every answer is backed by signed receipts.',
     nodeType: 'native',
     nodeModels: [],
@@ -51,17 +51,17 @@ export const CATALOG: ModelEntry[] = [
     outputCap: 512,
     outputCapThink: 512,
     swarm: {
-      profile: process.env.TIDE_SWARM_PROFILE ? JSON.parse(process.env.TIDE_SWARM_PROFILE) : 'nvidia/MiniMax-M2.5-NVFP4',
-      layerCount: Number(process.env.TIDE_SWARM_LAYERS) || 62,
-      manifestRef: process.env.TIDE_SWARM_MANIFEST ?? 'mf1:m25-nvfp4-v1',
+      profile: process.env.WHIR_SWARM_PROFILE ? JSON.parse(process.env.WHIR_SWARM_PROFILE) : 'nvidia/MiniMax-M2.5-NVFP4',
+      layerCount: Number(process.env.WHIR_SWARM_LAYERS) || 62,
+      manifestRef: process.env.WHIR_SWARM_MANIFEST ?? 'mf1:m25-nvfp4-v1',
     },
   },
   {
-    id: 'tide-dev',
-    name: 'Tide Dev (mock)',
+    id: 'whir-dev',
+    name: 'Whir Dev (mock)',
     description: 'Deterministic mock model for local testing. Dev builds only.',
     nodeType: 'native',
-    nodeModels: ['tide-dev'],
+    nodeModels: ['whir-dev'],
     inputBudget: 4_000,
     outputCap: 512,
     outputCapThink: 512,
@@ -69,7 +69,7 @@ export const CATALOG: ModelEntry[] = [
   },
 ];
 
-export const DEFAULT_MODEL = 'tide-max';
+export const DEFAULT_MODEL = 'whir-max';
 
 /** Resolve a public model id (with optional "-think" suffix) to a catalog entry. */
 export function resolveModel(id: string | undefined): { entry: ModelEntry; think: boolean } | null {

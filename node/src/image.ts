@@ -1,9 +1,9 @@
 /**
- * Image mode: serve `tide-image` jobs from ComfyUI (real GPU) or a procedural mock (testing).
+ * Image mode: serve `whir-image` jobs from ComfyUI (real GPU) or a procedural mock (testing).
  *
- *   tide-node --mode image --token tnt_… --comfy http://127.0.0.1:8188 --comfy-ckpt sd_xl_base_1.0.safetensors
- *   tide-node --mode image --token tnt_… --comfy-workflow my-flux-api.json      (custom graph, see below)
- *   tide-node --mode image --token tnt_… --backend mock
+ *   whir-node --mode image --token tnt_… --comfy http://127.0.0.1:8188 --comfy-ckpt sd_xl_base_1.0.safetensors
+ *   whir-node --mode image --token tnt_… --comfy-workflow my-flux-api.json      (custom graph, see below)
+ *   whir-node --mode image --token tnt_… --backend mock
  *
  * A custom workflow is a ComfyUI "API format" JSON where these strings are substituted:
  * "{{prompt}}", "{{negative}}", "{{width}}", "{{height}}", "{{steps}}", "{{cfg}}", "{{seed}}".
@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
 import { io, type Socket } from 'socket.io-client';
-import { IMAGE_MODEL, type ImageJobMsg, type ImageParams, type RegisterAck } from '@tide/shared';
+import { IMAGE_MODEL, type ImageJobMsg, type ImageParams, type RegisterAck } from '@whir/shared';
 
 export interface ImageBackend {
   describe(): string;
@@ -42,7 +42,7 @@ export function encodePng(width: number, height: number, rgb: Uint8Array): Buffe
 }
 
 // ------------------------------------------------------------------ mock backend
-/** Deterministic abstract "tide" art from prompt + seed, so the whole image path can be tested without a GPU. */
+/** Deterministic abstract art from prompt + seed, so the whole image path can be tested without a GPU. */
 export class MockImageBackend implements ImageBackend {
   describe() { return 'mock image renderer'; }
   async prepare() {}
@@ -110,7 +110,7 @@ export class ComfyBackend implements ImageBackend {
       '7': { class_type: 'CLIPTextEncode', inputs: { text: p.negativePrompt ?? 'blurry, low quality, watermark, text', clip: ['4', 1] } },
       '3': { class_type: 'KSampler', inputs: { seed: p.seed, steps: p.steps, cfg: p.cfg, sampler_name: 'euler', scheduler: 'normal', denoise: 1, model: ['4', 0], positive: ['6', 0], negative: ['7', 0], latent_image: ['5', 0] } },
       '8': { class_type: 'VAEDecode', inputs: { samples: ['3', 0], vae: ['4', 2] } },
-      '9': { class_type: 'SaveImage', inputs: { filename_prefix: 'tide', images: ['8', 0] } },
+      '9': { class_type: 'SaveImage', inputs: { filename_prefix: 'whir', images: ['8', 0] } },
     };
   }
 

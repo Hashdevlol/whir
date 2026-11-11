@@ -1,14 +1,14 @@
 {
-  "name": "tide-node",
+  "name": "whir-node",
   "private": true,
   "type": "module",
-  "bin": { "tide-node": "src/index.ts" },
+  "bin": { "whir-node": "src/index.ts" },
   "scripts": {
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tide/shared": "*",
+    "@whir/shared": "*",
     "socket.io-client": "^4.8.1"
   }
 }

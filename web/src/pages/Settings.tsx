@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import type { PlanId } from '@tide/shared';
+import type { PlanId } from '@whir/shared';
 import { useAuth } from '../lib/auth';
 import { api, ApiError, errMsg, apiOrigin } from '../lib/api';
 import { clusterLabel, useDeposit, type PlanIntent } from '../lib/solana';
@@ -27,7 +27,7 @@ export default function Settings() {
   return (
     <div className="page wrap">
       <div className="page-head">
-        <div className="eyebrow">settings</div>
+        <div className="kicker">Settings</div>
         <h1>Your account</h1>
       </div>
       <div className="settings">
@@ -331,18 +331,18 @@ function KeysTab() {
   };
 
   const base = `${apiOrigin()}/v1`;
-  const key = fresh ?? 'sk-tide-...';
+  const key = fresh ?? 'sk-whir-...';
   const curl = `curl ${base}/chat/completions \\
   -H "Authorization: Bearer ${key}" \\
   -H "Content-Type: application/json" \\
-  -d '{"model": "tide-max", "stream": true,
+  -d '{"model": "whir-max", "stream": true,
        "messages": [{"role": "user", "content": "Hello!"}]}'`;
   const py = `from openai import OpenAI
 
 client = OpenAI(base_url="${base}", api_key="${key}")
 
 stream = client.chat.completions.create(
-    model="tide-max",
+    model="whir-max",
     messages=[{"role": "user", "content": "Hello!"}],
     stream=True,
 )
@@ -353,7 +353,7 @@ for chunk in stream:
     <>
       <div className="card stack">
         <h3>API keys</h3>
-        <p className="small muted">Keys start with <code>sk-tide-</code> and work with any OpenAI-compatible client. Up to 5 active keys.</p>
+        <p className="small muted">Keys start with <code>sk-whir-</code> and work with any OpenAI-compatible client. Up to 5 active keys.</p>
         <form className="row" onSubmit={create} style={{ flexWrap: 'nowrap' }}>
           <input className="input grow" value={name} onChange={(e) => setName(e.target.value)} placeholder="Key name, e.g. my-app" maxLength={40} />
           <button className="btn btn-foam btn-sm">Create key</button>

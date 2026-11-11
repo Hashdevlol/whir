@@ -22,7 +22,7 @@ const TITLES: Record<string, string> = {
 function ScrollManager() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
-    document.title = TITLES[pathname] ? `${TITLES[pathname]} · Tide` : "Tide — compute that flows where it's needed";
+    document.title = TITLES[pathname] ? `${TITLES[pathname]} · Whir` : 'Whir — Spare power, shared.';
   }, [pathname]);
   useEffect(() => {
     if (hash) {

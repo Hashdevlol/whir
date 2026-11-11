@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import type { NetworkStats, NodeStatus } from '@tide/shared';
+import type { NetworkStats, NodeStatus } from '@whir/shared';
 import { API_URL, getToken, onTokenChange } from './api';
 
 let socket: Socket | null = null;
@@ -34,7 +34,7 @@ export function socketReady(timeoutMs = 10_000): Promise<Socket> {
   const s = getSocket();
   if (s.connected) return Promise.resolve(s);
   return new Promise((resolve, reject) => {
-    const t = setTimeout(() => { s.off('connect', ok); reject(new Error('Could not reach the Tide network')); }, timeoutMs);
+    const t = setTimeout(() => { s.off('connect', ok); reject(new Error('Could not reach the Whir network')); }, timeoutMs);
     const ok = () => { clearTimeout(t); resolve(s); };
     s.once('connect', ok);
     if (!s.active) s.connect();

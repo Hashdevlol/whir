@@ -1,5 +1,5 @@
 /**
- * Legal-safety floor. Tide does not moderate general content; the only hard line
+ * Legal-safety floor. Whir does not moderate general content; the only hard line
  * is sexual content involving minors, which is blocked on prompts and on output.
  */
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env -S npx tsx
 /**
- * tide-node — connect a GPU to the Tide network and earn for every token it serves.
+ * whir-node — connect a GPU to the Whir network and earn for every token it serves.
  *
- *   tide-node --token tnt_… [--url https://tide.network] [--backend ollama|openai|mock]
+ *   whir-node --token tnt_… [--url https://whir.network] [--backend ollama|openai|mock]
  *             [--base-model qwen3:8b] [--ollama http://127.0.0.1:11434]
  *             [--upstream http://127.0.0.1:8080/v1 --upstream-model my-model]
  */
@@ -10,13 +10,13 @@ import { io, type Socket } from 'socket.io-client';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import type { JobNewMsg, RegisterAck, RegisterPayload } from '@tide/shared';
+import type { JobNewMsg, RegisterAck, RegisterPayload } from '@whir/shared';
 import { MockBackend, OllamaBackend, OpenAICompatBackend, type Backend } from './backends.ts';
 import { runImageNode } from './image.ts';
 import { runCurrentNode } from './current.ts';
 
 const VERSION = '0.1.0';
-const CONFIG_PATH = join(homedir(), '.tide-node.json');
+const CONFIG_PATH = join(homedir(), '.whir-node.json');
 
 function parseArgs(argv: string[]) {
   const out: Record<string, string | boolean> = {};
@@ -37,20 +37,20 @@ const log = (s: string) => console.log(`\x1b[36m≈\x1b[0m ${s}`);
 const warn = (s: string) => console.log(`\x1b[33m!\x1b[0m ${s}`);
 
 if (args.help || !args.token) {
-  console.log(`tide-node ${VERSION}
+  console.log(`whir-node ${VERSION}
 
   --token <tnt_…>         node token from the Earn page (required)
-  --url <url>             Tide server (default http://localhost:3001)
+  --url <url>             Whir server (default http://localhost:3001)
   --backend <name>        ollama (default) | openai | mock
-  --base-model <name>     Ollama base model to serve as tide-max (default qwen3:8b)
+  --base-model <name>     Ollama base model to serve as whir-max (default qwen3:8b)
   --ollama <url>          Ollama URL (default http://127.0.0.1:11434)
   --num-ctx <n>           context window for Ollama (default 16384)
   --upstream <url>        OpenAI-compatible base URL, e.g. http://127.0.0.1:8080/v1
   --upstream-model <id>   model id on the upstream server
   --upstream-key <key>    API key for the upstream server, if any
-  --save                  remember these options in ~/.tide-node.json
+  --save                  remember these options in ~/.whir-node.json
 
-  image mode (serves tide-image):
+  image mode (serves whir-image):
   --mode image            run as an image node
   --comfy <url>           ComfyUI URL (default http://127.0.0.1:8188)
   --comfy-ckpt <file>     checkpoint for the built-in SDXL-style workflow
@@ -58,8 +58,8 @@ if (args.help || !args.token) {
   --backend mock          procedural test images (no GPU)
 
   swarm mode (Current — one big model split across GPUs, experimental):
-  --mode current          join a swarm for tide-swarm
-  --current-dir <dir>     Current checkout (tide/current)
+  --mode current          join a swarm for whir-swarm
+  --current-dir <dir>     Current checkout (whir/current)
   --model-dir <dir>       model weights directory
   --sidecar <bin>         built Current sidecar binary (libp2p tunnels)
   --public-ip / --vram-mb / --subnet / --up-mbps   override auto-detection
@@ -93,7 +93,7 @@ async function benchmark(b: Backend): Promise<number> {
   let first = 0, n = 0;
   const t0 = Date.now();
   await b.generate({
-    messages: [{ role: 'user', content: 'Write a short paragraph about ocean tides.' }],
+    messages: [{ role: 'user', content: 'Write a short paragraph about how rainbows form.' }],
     maxTokens: 64, think: false, signal: ctl.signal,
     onToken: () => { if (!n++) first = Date.now(); },
   });
@@ -104,7 +104,7 @@ async function benchmark(b: Backend): Promise<number> {
 
 async function main() {
   const backend = makeBackend();
-  log(`tide-node ${VERSION} · ${backend.describe()}`);
+  log(`whir-node ${VERSION} · ${backend.describe()}`);
   await backend.prepare(log);
   log('benchmarking…');
   const tps = await benchmark(backend);

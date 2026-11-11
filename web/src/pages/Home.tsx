@@ -1,318 +1,342 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { NODE_SHARE, REFERRAL_SHARE } from '@tide/shared';
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { IMAGE_CREDITS, NODE_SHARE, PLANS, PRICE_IN_PER_M_USD, PRICE_OUT_PER_M_USD, REFERRAL_SHARE } from '@whir/shared';
 import { Footer } from '../components/Nav';
-import { NodeMascot } from '../components/Logo';
-import { NodeField } from '../components/NodeField';
+import { Blades, LogoMark } from '../components/Logo';
 import { copyText } from '../components/CopyButton';
-import { useNetworkStats } from '../lib/socket';
-import { api, apiOrigin } from '../lib/api';
-import { useCountUp, useFeed, type FeedReceipt } from '../lib/live';
+import { useNetworkStats, useSocketConnected } from '../lib/socket';
+import { apiOrigin } from '../lib/api';
+import { reducedMotion, useReveal, useScrollProgress } from '../lib/motion';
 import { fmtInt } from '../lib/format';
 
-export const PENDING_PROMPT_KEY = 'tide_pending_prompt';
+export const PENDING_PROMPT_KEY = 'whir_pending_prompt';
 const pct = (x: number) => Math.round(x * 100);
+const NODE = pct(NODE_SHARE), REF = pct(REFERRAL_SHARE);
 
-function Num({ value, digits = 0, prefix = '' }: { value: number | undefined; digits?: number; prefix?: string }) {
-  const { shown, bump } = useCountUp(value);
+/** Headline whose lines rise out of a mask, one after another. */
+function Lines({ lines, as: Tag = 'h2', className }: { lines: string[]; as?: 'h1' | 'h2'; className?: string }) {
   return (
-    <span key={bump} className={bump ? 'bump' : undefined} style={{ display: 'inline-block' }}>
-      {prefix}{shown.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })}
-    </span>
+    <Tag className={`lines${className ? ' ' + className : ''}`} data-reveal aria-label={lines.join(' ')}>
+      {lines.map((l, i) => (
+        <span className="ln" key={i} aria-hidden="true"><span style={{ transitionDelay: `${i * 90}ms` }}>{l}</span></span>
+      ))}
+    </Tag>
   );
 }
 
-function Clock() {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
-  const p = (n: number) => String(n).padStart(2, '0');
-  return <span>UTC {p(now.getUTCHours())}<span className="colon">:</span>{p(now.getUTCMinutes())}<span className="colon">:</span>{p(now.getUTCSeconds())}</span>;
-}
+/* ------------------------------------------------------------------ hero window */
 
-function ago(t: number) {
-  const s = Math.max(1, Math.round((Date.now() - t) / 1000));
-  if (s < 60) return `${s}s ago`;
-  if (s < 3600) return `${Math.round(s / 60)}m ago`;
-  if (s < 86400) return `${Math.round(s / 3600)}h ago`;
-  return `${Math.round(s / 86400)}d ago`;
-}
+const HAIKU = ['Fans hum through the night,', "a stranger's question answered,", 'my desk lamp still off.'];
 
-function Receipt({ r, i, drop }: { r: FeedReceipt; i: number; drop: boolean }) {
-  const rot = ((i * 37) % 7) - 3;
-  return (
-    <article className={`receipt${drop ? ' drop' : ''}`} style={{ ['--rot' as string]: `${rot * 0.6}deg` }}>
-      <h4>Tide</h4>
-      <div className="ctr">INFERENCE RECEIPT</div>
-      <div className="ctr">{new Date(r.at).toISOString().replace('T', ' ').slice(0, 19)} UTC</div>
-      <hr />
-      <div className="ln"><span>JOB</span><span>#{r.hash.slice(0, 10)}</span></div>
-      <div className="ln"><span>NODE</span><span>{r.node}</span></div>
-      <div className="ln"><span>MODEL</span><span>{r.model}</span></div>
-      <hr />
-      {r.kind === 'image'
-        ? <div className="ln"><span>IMAGE</span><span>1 × render</span></div>
-        : <>
-            <div className="ln"><span>TOKENS IN</span><span>{fmtInt(r.tokensIn)}</span></div>
-            <div className="ln"><span>TOKENS OUT</span><span>{fmtInt(r.tokensOut)}</span></div>
-          </>}
-      {r.ms ? <div className="ln"><span>TIME</span><span>{(r.ms / 1000).toFixed(2)}s</span></div> : null}
-      <div className="ln"><span>CHARGED</span><span>{r.credits} CR</span></div>
-      <hr />
-      <div className="ln tot"><span>TO NODE</span><span>${r.paidUsd.toFixed(5)}</span></div>
-      <div className="ctr" style={{ marginTop: 8 }}>PROMPT NOT STORED · {ago(r.at)}</div>
-      <div className="barcode" aria-hidden="true" />
-      {r.paidUsd > 0 && <div className="stamp">PAID</div>}
-    </article>
-  );
-}
-
-const FAQ: [string, string][] = [
-  ['Who answers my prompt?', 'A GPU owned by someone on the network — a gaming PC running Ollama, a rig with llama.cpp, or a browser tab using WebGPU. The orchestrator picks a free node, weighted by its measured speed.'],
-  ['Is my prompt stored?', 'No. Prompts and answers are streamed through and never written to our database. We keep token counts for billing, nothing else. The node that served you sees the text, the same way any model host does.'],
-  ['What does it cost?', 'Per token: $0.15 per million in, $0.90 per million out. A typical message is about one credit ($0.001). Free accounts get daily credits; you can start without an account.'],
-  ['How do node owners get paid?', `${pct(NODE_SHARE)}% of what the user paid for the tokens their GPU generated, credited per job and withdrawable in USDC from $1.`],
-  ['What stops a node from faking answers?', 'Hidden test prompts with known answers, speed limits no real GPU can beat, coherence checks and strikes. Fail enough and the account is banned and unpaid.'],
-  ['Can I use it from code?', 'Yes. It speaks the OpenAI API — change the base URL and the key. Streaming, tools and usage are supported.'],
-];
-
-export default function Home() {
-  const stats = useNetworkStats();
-  const nav = useNavigate();
-  const { feed, fresh } = useFeed();
-  const [prompt, setPrompt] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [paid, setPaid] = useState<number | undefined>(undefined);
-  const [picked, setPicked] = useState(0);
-  const origin = apiOrigin();
-  const baseUrl = `${origin.replace(/^https?:\/\//, '')}/v1`;
+/** The product, drawn in HTML: a chat being answered, and the node that answered it. */
+function HeroWindow() {
+  const ref = useRef<HTMLDivElement>(null);
+  const win = useRef<HTMLDivElement>(null);
+  const [chars, setChars] = useState(0);
+  const total = HAIKU.join('\n').length;
 
   useEffect(() => {
-    const load = () => api<{ paidToNodes: number }>('/api/treasury', { token: null }).then((t) => setPaid(t.paidToNodes)).catch(() => {});
-    load();
-    const t = setInterval(load, 15000);
-    return () => clearInterval(t);
-  }, []);
+    if (reducedMotion()) { setChars(total); return; }
+    let i = 0, t: ReturnType<typeof setTimeout>;
+    const step = () => {
+      i += 1 + Math.round(Math.random());
+      setChars(Math.min(total, i));
+      if (i < total) t = setTimeout(step, 34 + Math.random() * 40);
+    };
+    t = setTimeout(step, 1100);
+    return () => clearTimeout(t);
+  }, [total]);
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const p = prompt.trim();
-    if (p) sessionStorage.setItem(PENDING_PROMPT_KEY, p);
-    nav('/chat');
-  };
+  useScrollProgress(ref, (p) => {
+    if (!win.current || reducedMotion()) return;
+    const k = Math.min(1, p / 0.42);                  // flattens over the first part of the scroll
+    const e = 1 - Math.pow(1 - k, 3);
+    win.current.style.transform = `perspective(1800px) rotateX(${(1 - e) * 14}deg) scale(${0.94 + e * 0.06})`;
+  });
+
+  let left = chars;
+  const shown = HAIKU.map((l) => { const s = l.slice(0, Math.max(0, left)); left -= l.length + 1; return s; });
+  const done = chars >= total;
+
+  return (
+    <div className="hero-stage" ref={ref}>
+      <div className="hero-window" ref={win}>
+        <aside className="hw-side">
+          <div className="hw-dots"><i /><i /><i /></div>
+          <div className="hw-it on">New chat</div>
+          <div className="hw-it">Create</div>
+          <div className="hw-it">API keys</div>
+          <div className="hw-it">Earn</div>
+        </aside>
+        <div className="hw-main">
+          <div className="hw-u">Write a haiku about a computer that never sleeps.</div>
+          <div className="hw-a">
+            <div className="hw-who"><LogoMark size={18} spin={!done} /> Whir Max</div>
+            {shown.map((l, i) => <p key={i}>{l}{!done && l.length > 0 && (i === 2 || shown[i + 1] === '') ? <span className="caret" /> : null}</p>)}
+          </div>
+          <div className="hw-composer"><span>Message Whir…</span><i /></div>
+        </div>
+      </div>
+      <div className="node-card" data-reveal>
+        <div className="nc-t"><LogoMark size={30} spin />Your node</div>
+        <div className="nc-s"><span className="led" />Running · serving the network</div>
+        <div className="nc-k">You keep <b>{NODE}%</b> of what it serves.</div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ how it works: the fan (signature) */
+
+const STEPS = [
+  { k: 'Run a node', h: 'Run a node.', p: 'Install the node on your Mac, PC or GPU box, next to Ollama or llama.cpp. Or open Earn in a browser that supports WebGPU.', status: 'Starting · checking speed' },
+  { k: 'It serves AI', h: 'It serves AI.', p: 'Requests from chat, create and the API are routed to online nodes, and every token streams straight back.', status: 'Running · serving the network' },
+  { k: `You keep ${NODE}%`, h: `You keep ${NODE}%.`, p: `You’re paid for every job it completes. ${REF}% goes to whoever referred the user.`, status: 'Running · serving the network' },
+];
+
+function HowItWorks() {
+  const ref = useRef<HTMLElement>(null);
+  const fan = useRef<SVGGElement>(null);
+  const angle = useRef(0);
+  const speed = useRef(0);
+  const [step, setStep] = useState(0);
+
+  useScrollProgress(ref, (p, dt) => {
+    const s = Math.min(STEPS.length - 1, Math.floor(p * STEPS.length * 0.999));
+    setStep((o) => (o === s ? o : s));
+    if (!fan.current) return;
+    // deg per ms: still at first, spins up while the node starts, full whir once it serves
+    const target = reducedMotion() ? 0 : p < 0.1 ? 0 : p < 0.33 ? (p - 0.1) * 1.4 : 0.95;
+    speed.current += (target - speed.current) * Math.min(1, dt / 420);
+    angle.current = (angle.current + speed.current * dt) % 360;
+    fan.current.setAttribute('transform', `rotate(${angle.current} 50 50)`);
+    fan.current.style.filter = speed.current > 0.5 ? `blur(${Math.min(1.1, (speed.current - 0.5) * 2.4)}px)` : '';
+  }, true);
+
+  const running = step >= 1;
+  return (
+    <section className="fan-story" ref={ref} aria-label="How it works">
+      <div className="fan-pin">
+        <div className="wrap fan-grid">
+          <div className="fan-visual">
+            <div className="fan-wrap">
+              <svg viewBox="0 0 100 100" className="fan-rings" aria-hidden="true">
+                {[34, 40, 46].map((r) => <circle key={r} cx="50" cy="50" r={r} fill="none" stroke="#E5E5EA" strokeWidth=".18" />)}
+              </svg>
+              <svg viewBox="10 10 80 80" className="fan-svg" aria-hidden="true">
+                <circle cx="50" cy="50" r="40" fill="#1D1D1F" />
+                <g ref={fan}><Blades /></g>
+              </svg>
+            </div>
+            <div className={`fan-status${running ? ' on' : ''}`}>
+              <span className={`led${running ? '' : ' off'}`} />
+              {STEPS[step].status}
+            </div>
+          </div>
+          <div className="fan-copy">
+            <div className="how-head"><span className="kicker">How it works</span></div>
+            <div className="fan-steps" role="list">
+              {STEPS.map((s, i) => <span role="listitem" key={s.k} className={i === step ? 'on' : i < step ? 'past' : ''}>{s.k}</span>)}
+            </div>
+            <div className="fan-text">
+              {STEPS.map((s, i) => (
+                <div key={s.k} className={`fan-panel${i === step ? ' on' : ''}`} aria-hidden={i !== step}>
+                  <h2>{s.h}</h2>
+                  <p>{s.p}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ page */
+
+export default function Home() {
+  const root = useRef<HTMLDivElement>(null);
+  const stats = useNetworkStats();
+  const connected = useSocketConnected();
+  const [copied, setCopied] = useState(false);
+  const base = `${apiOrigin()}/v1`;
+  useReveal(root);
+
   const copy = async () => {
-    await copyText(`${origin}/v1`);
+    await copyText(base);
     setCopied(true);
     setTimeout(() => setCopied(false), 1400);
   };
-  const onPick = useCallback(() => setPicked((n) => n + 1), []);
 
-  const receipts = feed?.receipts ?? [];
-  const latest = receipts[0];
+  const live = connected && !!stats;
   const nodes = stats?.nodesOnline ?? 0;
-  const util = stats && nodes ? stats.busy / nodes : 0;
 
   return (
-    <div className="landing">
+    <div className="landing" ref={root}>
       {/* ------------------------------------------------------------ hero */}
       <header className="hero">
-        <div className="wrap hero-grid">
-          <div className="hero-head">
-            <div className="eyebrow">Open AI inference · paid per token</div>
-            <h1 style={{ marginTop: 22 }}>AI on everyone's <span className="out">GPUs.</span></h1>
+        <div className="wrap">
+          <Link to="/network" className={`status-pill${live && nodes ? ' on' : ''}`} data-reveal>
+            <span className={`led${live && nodes ? '' : ' off'}`} />
+            {live ? (nodes ? `${fmtInt(nodes)} ${nodes === 1 ? 'node' : 'nodes'} online` : 'Network online') : 'Network status'}
+            <span className="chev">›</span>
+          </Link>
+          <Lines as="h1" lines={['Spare power, shared.']} className="hero-h1" />
+          <p className="hero-sub" data-reveal>
+            AI chat, image creation and an OpenAI&#8209;compatible API, served by everyday computers. Run a node and keep {NODE}% of what it serves.
+          </p>
+          <div className="hero-cta" data-reveal>
+            <Link to="/chat" className="btn btn-ink btn-lg">Start chatting</Link>
+            <Link to="/earn" className="btn btn-text btn-lg">Run a node ›</Link>
           </div>
-          <div>
-            <p className="lead" style={{ marginTop: 0 }}>
-              Ask anything. An idle GPU somewhere on the internet answers, streams it back, and its owner gets <span className="mark">{pct(NODE_SHARE)}% of every token</span>. Open models. Nothing you type is stored.
-            </p>
-            <form className="hero-prompt" onSubmit={submit}>
-              <input value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Ask the network anything…" aria-label="Your prompt" maxLength={4000} />
-              <button type="submit">Ask →</button>
-            </form>
-            <div className="cta">
-              <button className={`copy-pill${copied ? ' copied' : ''}`} onClick={copy} title="Copy the OpenAI-compatible base URL">
-                <span>base_url = {baseUrl}</span><b>{copied ? 'Copied' : 'Copy'}</b>
-              </button>
-              <Link to="/earn" className="btn btn-ghost">Run a node</Link>
-            </div>
-          </div>
-
-          <aside className="board" aria-label="Live network board">
-            <div className="board-top">
-              <span className="live"><i />Live</span>
-              <Clock />
-            </div>
-            <div className="board-big"><Num value={stats?.tokensGenerated} /></div>
-            <div className="board-cap">TOKENS SERVED BY THE NETWORK</div>
-            <div className="board-bar"><i style={{ width: `${Math.max(3, util * 100)}%` }} /></div>
-            <div className="board-bar-cap"><span>Utilisation</span><span>{pct(util)}% busy · queue {stats?.queueDepth ?? 0}</span></div>
-            <div className="board-tiles">
-              <div><b><Num value={nodes} /></b><span>Nodes online</span></div>
-              <div><b><Num value={paid} digits={4} prefix="$" /></b><span>Paid to nodes</span></div>
-            </div>
-            <div className="board-hash">
-              <span>LAST RECEIPT</span>
-              <b>{latest ? `#${latest.hash} · ${latest.node} · ${ago(latest.at)}` : 'waiting for the first job…'}</b>
-            </div>
-          </aside>
         </div>
+        <HeroWindow />
       </header>
 
-      {/* ------------------------------------------------------------ node field */}
-      <div className="field-band">
-        <NodeField onPick={onPick} />
-        <div className="field-caption"><i />1 of {Math.max(nodes, 1).toLocaleString()} nodes answers you · routed {picked}×</div>
-      </div>
-
-      {/* ------------------------------------------------------------ ticker */}
-      <div className="ticker" aria-label="Recently served jobs">
-        <div className="ticker-label">JUST SERVED</div>
-        <div className="ticker-rail">
-          <div className="ticker-track">
-            {[0, 1].map((dup) => (
-              <span key={dup} style={{ display: 'inline-flex', gap: 10, paddingRight: 10 }} aria-hidden={dup === 1}>
-                {(receipts.length ? receipts : Array.from({ length: 6 }, () => null)).map((r, i) => r ? (
-                  <span className="tick" key={i}><i className="av" style={{ background: i % 3 ? '#C9C6BD' : '#19E57F' }} />{r.node} · {r.kind === 'image' ? '1 image' : `${fmtInt(r.tokensOut)} tok`} · <b>+${r.paidUsd.toFixed(5)}</b></span>
-                ) : (
-                  <span className="tick" key={i}><i className="av" />waiting for jobs · nodes paid {pct(NODE_SHARE)}%</span>
-                ))}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ------------------------------------------------------------ stats */}
-      <section style={{ paddingBlock: 'clamp(56px, 7vw, 96px)' }}>
-        <div className="wrap">
-          <div className="stats-row">
-            <div><b><Num value={nodes} /></b><span>GPUs online now</span></div>
-            <div><b><Num value={feed?.totals.jobs ?? stats?.jobsCompleted} /></b><span>Jobs served</span></div>
-            <div><b><Num value={stats?.avgTokPerSec} digits={1} /></b><span>Avg tokens / sec</span></div>
-            <div><b>0</b><span>Prompts stored</span></div>
-          </div>
-        </div>
-      </section>
+      <div style={{ height: 'clamp(80px, 10vw, 140px)' }} />
 
       {/* ------------------------------------------------------------ how it works */}
-      <section style={{ paddingTop: 0 }}>
+      <HowItWorks />
+
+      {/* ------------------------------------------------------------ use it */}
+      <section className="sect paper">
         <div className="wrap">
-          <div className="eyebrow">How it works</div>
-          <h2 style={{ marginTop: 18 }}>Three steps.<br />No datacenter.</h2>
-          <div className="how">
-            <div className="how-card paper">
-              <span className="n">01</span>
-              <h3>You ask</h3>
-              <p>In chat, the image studio, or any OpenAI client. Credits are held for the worst case, then settled to the exact tokens you got.</p>
-            </div>
-            <div className="how-card ink">
-              <span className="n">02</span>
-              <h3>A GPU answers</h3>
-              <p>The orchestrator routes your prompt to a free node, weighted by measured speed, and streams every token straight back.</p>
-            </div>
-            <div className="how-card cash">
-              <span className="n">03</span>
-              <h3>Its owner gets paid</h3>
-              <p>{pct(NODE_SHARE)}% of what you paid goes to the person whose hardware did the work. {pct(REFERRAL_SHARE)}% to whoever invited you.</p>
-            </div>
+          <div className="sect-head">
+            <p className="kicker" data-reveal>Use it</p>
+            <Lines lines={['AI for everyone,', 'served by everyone.']} />
+          </div>
+          <div className="use">
+            <Link to="/chat" className="tile-b" data-reveal>
+              <div className="tb-copy">
+                <h3>Chat</h3>
+                <p>Open models that answer in real time, search the web when it helps, and think step by step when you ask them to.</p>
+                <span className="more">Start chatting ›</span>
+              </div>
+              <div className="mini-chat" aria-hidden="true">
+                <div className="mc-u">What should I cook with leeks and two eggs?</div>
+                <div className="mc-a"><span /><span /><span style={{ width: '62%' }} /></div>
+                <div className="mc-bar"><span className="chip-m">Whir Max</span><span className="chip-m ghost">Think</span><span className="mc-send">↑</span></div>
+              </div>
+            </Link>
+            <Link to="/create" className="tile-b" data-reveal>
+              <div className="tb-copy">
+                <h3>Create</h3>
+                <p>Images from a sentence, rendered on someone’s graphics card. Your history stays in your browser.</p>
+                <span className="more">Open Create ›</span>
+              </div>
+              <div className="canvas-mock" aria-hidden="true">
+                <div className="cm-frame"><LogoMark size={44} /></div>
+                <div className="cm-ratios"><i style={{ width: 14 }} /><i style={{ width: 18 }} /><i style={{ width: 10 }} /></div>
+              </div>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ------------------------------------------------------------ manifesto */}
-      <section className="manifesto">
-        <div className="wrap">
-          <div className="eyebrow" style={{ color: '#9F9C92' }}>Why</div>
-          <p className="big" style={{ marginTop: 26 }}>
-            Every answer used to come from <s>three companies</s> <span className="cashw">a stranger's GPU.</span> <span className="hl">Now it pays them.</span>
-          </p>
-          <p className="sub">Hundreds of millions of gaming GPUs sit idle most of the day. Tide turns that idle time into inference for anyone, and sends most of the money back to the people who own the hardware.</p>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------------ receipts */}
-      <section style={{ paddingBottom: 'clamp(40px, 6vw, 80px)' }}>
-        <div className="wrap">
-          <div className="row-between" style={{ alignItems: 'flex-end' }}>
-            <div>
-              <div className="eyebrow">Receipts wall · live</div>
-              <h2 style={{ marginTop: 18 }}>Every token<br />gets a receipt.</h2>
-            </div>
-            <p className="sub" style={{ maxWidth: 380 }}>Real jobs from the network, printed as they settle. No prompts, no users — just what ran, where, and who got paid.</p>
-          </div>
-          <div className="receipts">
-            {receipts.length
-              ? receipts.slice(0, 14).map((r, i) => <Receipt key={r.hash} r={r} i={i} drop={fresh.has(r.hash)} />)
-              : <div className="empty" style={{ width: '100%' }}>No jobs yet. <Link className="link" to="/chat">Be the first →</Link></div>}
-          </div>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------------ proof */}
-      <section style={{ borderTop: '1.5px solid var(--ink)' }}>
-        <div className="wrap proof">
+      {/* ------------------------------------------------------------ run a node */}
+      <section className="sect">
+        <div className="wrap run-sect">
           <div>
-            <div className="eyebrow">Trust</div>
-            <h2 style={{ marginTop: 18, fontSize: 'clamp(38px, 4.6vw, 74px)' }}>Nobody grades their own homework.</h2>
-            <ol>
-              <li><span><b>Hidden test prompts.</b> Nodes get questions with known answers that look like real jobs. Wrong answers ban the account.</span></li>
-              <li><span><b>Physics checks.</b> Faster than any real GPU, or gibberish output? No pay, and a strike.</span></li>
-              <li><span><b>Signed receipts.</b> Big models split across GPUs sign every layer they ran. No valid chain, no payout.</span></li>
-              <li><span><b>You pay for what arrived.</b> Stop mid-answer and you're charged for the tokens you got. Nothing arrived, nothing charged.</span></li>
-            </ol>
-            <p style={{ marginTop: 24 }}><Link className="link" to="/network">Watch the network live →</Link></p>
+            <p className="kicker" data-reveal>Earn</p>
+            <Lines lines={['Run a node.', `Keep ${NODE}%.`]} />
+            <ul className="facts">
+              <li data-reveal><span><b>Runs on your own computer or GPU.</b> Use Ollama, llama.cpp or any OpenAI&#8209;compatible server, or a browser tab.</span></li>
+              <li data-reveal><span><b>Serves chat, images and API requests</b> routed to it by the network.</span></li>
+              <li data-reveal><span><b>You keep {NODE}% per job.</b> Paid for every job it completes.</span></li>
+            </ul>
+            <Link to="/earn" className="btn btn-ink btn-lg" data-reveal>Set up a node ›</Link>
           </div>
-          <div className="code-card">
-            <div className="code-head"><span>settle(job)</span><span>orchestrator</span></div>
-            <pre>{`node   = pick(idle_nodes, weight = measured_tok_s)
-hold   = cost(input + max_output)     `}<span className="c"># reserved up front</span>{`
-
-for token in stream(node, job):       `}<span className="c"># you see it live</span>{`
-    send(you, token)
-
-charge = cost(input + tokens_delivered)
-refund(you, hold - charge)            `}<span className="c"># settled to the token</span>{`
-
-if passes_canaries(node) and speed_ok and coherent:
-    pay(node.owner, charge * `}<span className="s">{NODE_SHARE.toFixed(2)}</span>{`)
-else:
-    strike(node.owner)                `}<span className="c"># 5 strikes = banned</span></pre>
+          <div className="node-big" data-reveal aria-label="Node status, as shown in the node app">
+            <div className="nb-top">
+              <LogoMark size={56} spin />
+              <div>
+                <b>Your node</b>
+                <span><span className="led" />Running · serving the network</span>
+              </div>
+            </div>
+            <div className="nb-rows">
+              <div><span>Serves</span><b>Chat · Create · API</b></div>
+              <div><span>Paid</span><b>Per completed job</b></div>
+              <div><span>Referrer share</span><b>{REF}%</b></div>
+            </div>
+            <div className="nb-keep"><span className="num">{NODE}%</span><span>of what it serves<br />is yours.</span></div>
           </div>
         </div>
       </section>
 
-      {/* ------------------------------------------------------------ rules */}
-      <section style={{ paddingTop: 0 }}>
+      {/* ------------------------------------------------------------ api */}
+      <section className="sect api-sect">
+        <div className="wrap api-grid">
+          <div>
+            <p className="kicker" data-reveal>API</p>
+            <Lines lines={['One API.', 'Many machines.']} />
+            <p className="sub" data-reveal>OpenAI&#8209;compatible. Swap the base URL and the key; streaming, tools and usage work as you expect.</p>
+            <Link to="/settings#keys" className="btn btn-light btn-lg" data-reveal>Get an API key ›</Link>
+          </div>
+          <div className="api-code" data-reveal>
+            <div className="ac-head">
+              <span>python</span>
+              <button className={`copy-pill${copied ? ' copied' : ''}`} onClick={copy} title="Copy the base URL">
+                <span className="mono">{base.replace(/^https?:\/\//, '')}</span><b>{copied ? 'Copied' : 'Copy'}</b>
+              </button>
+            </div>
+            <pre aria-label="Example request">
+{`from openai import OpenAI
+
+client = OpenAI(
+    base_url="`}<span className="s">{base}</span>{`",  `}<span className="c"># the only change</span>{`
+    api_key="sk-whir-…",
+)
+
+stream = client.chat.completions.create(
+    model="whir-max",
+    messages=[{"role": "user", "content": "Hello"}],
+    stream=True,
+)`}</pre>
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------ pricing */}
+      <section className="sect paper">
         <div className="wrap">
-          <div className="eyebrow">House rules</div>
-          <div className="rules">
-            <div className="rule"><h4>Prompts are never stored.</h4><p>Streamed through, counted, forgotten. Token counts are the only thing we keep.</p></div>
-            <div className="rule"><h4>Pay per token.</h4><p>$0.15 / M in, $0.90 / M out. Held up front, refunded to the exact token.</p></div>
-            <div className="rule"><h4>{pct(NODE_SHARE)}% to the GPU.</h4><p>The node that served you gets the biggest share. Withdraw in USDC from $1.</p></div>
-            <div className="rule"><h4>Open models only.</h4><p>No refusal layer. The single hard line is illegal content involving minors.</p></div>
-            <div className="rule"><h4>Cheaters get probed.</h4><p>Test prompts, speed limits and coherence checks. Five strikes and you're out.</p></div>
-            <div className="rule"><h4>No account to start.</h4><p>Five free prompts on the house. Sign in for a daily grant.</p></div>
+          <div className="sect-head row-between" style={{ alignItems: 'flex-end' }}>
+            <div>
+              <p className="kicker" data-reveal>Pricing</p>
+              <Lines lines={['Pay for what', 'you use.']} />
+            </div>
+            <Link className="btn btn-ghost" to="/pricing" data-reveal>All plans ›</Link>
           </div>
+          <div className="prices">
+            <div className="price-c" data-reveal>
+              <h3>Chat</h3>
+              <p>Start free, no account needed. Plans add a daily credit grant.</p>
+              <div className="pv">${PLANS.free.priceUsd} <small>to start</small></div>
+            </div>
+            <div className="price-c" data-reveal>
+              <h3>Create</h3>
+              <p>A flat price per image, whatever the prompt.</p>
+              <div className="pv">{IMAGE_CREDITS} <small>credits per image</small></div>
+            </div>
+            <div className="price-c" data-reveal>
+              <h3>API</h3>
+              <p>Per million tokens, in and out. Charged to the exact token.</p>
+              <div className="pv">${PRICE_IN_PER_M_USD.toFixed(2)} <small>/ ${PRICE_OUT_PER_M_USD.toFixed(2)} per M</small></div>
+            </div>
+          </div>
+          <p className="price-note" data-reveal>Nodes keep {NODE}% of every job. {REF}% to referrers.</p>
         </div>
       </section>
 
-      {/* ------------------------------------------------------------ faq */}
-      <section style={{ paddingTop: 0 }}>
-        <div className="wrap" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 36 }}>
-          <h2>Questions.</h2>
-          <div className="faq">
-            {FAQ.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}
-          </div>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------------ final */}
-      <section className="final">
+      {/* ------------------------------------------------------------ closing */}
+      <section className="closing">
         <div className="wrap">
-          <NodeMascot className="mascot" />
-          <h2>Plug in.<br /><span className="out">Get paid.</span></h2>
-          <div className="cta">
-            <Link to="/earn" className="btn btn-ink btn-lg">Run a node →</Link>
-            <Link to="/chat" className="btn btn-ghost btn-lg">Ask something</Link>
+          <div className="final-fan" aria-hidden="true"><LogoMark size={72} spin /></div>
+          <Lines lines={['Spare power, shared.']} />
+          <div className="hero-cta" data-reveal>
+            <Link to="/chat" className="btn btn-ink btn-lg">Get started</Link>
+            <Link to="/earn" className="btn btn-text btn-lg">Run a node ›</Link>
           </div>
         </div>
       </section>

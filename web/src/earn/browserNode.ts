@@ -1,9 +1,9 @@
 /**
- * Browser node: serves Tide Lite jobs from this tab over WebGPU with WebLLM.
+ * Browser node: serves Whir Lite jobs from this tab over WebGPU with WebLLM.
  * Lives at module scope so it keeps serving while the user navigates the app.
  */
 import { useSyncExternalStore } from 'react';
-import type { ChatMessage, JobNewMsg, RegisterAck, RegisterPayload } from '@tide/shared';
+import type { ChatMessage, JobNewMsg, RegisterAck, RegisterPayload } from '@whir/shared';
 import type { MLCEngine } from '@mlc-ai/web-llm';
 import { getSocket, socketReady } from '../lib/socket';
 
@@ -211,7 +211,7 @@ function wireSocket() {
 async function holdLocks() {
   const locks = (navigator as any).locks;
   if (locks?.request && !releaseLock) {
-    locks.request('tide-browser-node', () => new Promise<void>((resolve) => { releaseLock = resolve; })).catch(() => {});
+    locks.request('whir-browser-node', () => new Promise<void>((resolve) => { releaseLock = resolve; })).catch(() => {});
   }
   try { wakeLock = await (navigator as any).wakeLock?.request('screen'); } catch { /* optional */ }
 }

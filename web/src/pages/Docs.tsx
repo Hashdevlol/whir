@@ -1,6 +1,6 @@
 import { apiOrigin } from '../lib/api';
 import { Link } from 'react-router-dom';
-import { PRICE_IN_PER_M_USD, PRICE_OUT_PER_M_USD } from '@tide/shared';
+import { PRICE_IN_PER_M_USD, PRICE_OUT_PER_M_USD } from '@whir/shared';
 import { CodeBlock } from '../components/CopyButton';
 import { Footer } from '../components/Nav';
 
@@ -33,23 +33,23 @@ export default function Docs() {
   const base = `${origin}/v1`;
 
   const curl = `curl ${base}/chat/completions \\
-  -H "Authorization: Bearer $TIDE_API_KEY" \\
+  -H "Authorization: Bearer $WHIR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "tide-max",
+    "model": "whir-max",
     "messages": [
       {"role": "system", "content": "You are concise."},
-      {"role": "user", "content": "Why do tides happen?"}
+      {"role": "user", "content": "Why is the sky blue?"}
     ],
     "max_tokens": 512
   }'`;
   const py = `from openai import OpenAI
 
-client = OpenAI(base_url="${base}", api_key="sk-tide-...")
+client = OpenAI(base_url="${base}", api_key="sk-whir-...")
 
 stream = client.chat.completions.create(
-    model="tide-max",
-    messages=[{"role": "user", "content": "Explain the tides."}],
+    model="whir-max",
+    messages=[{"role": "user", "content": "Explain why the sky is blue."}],
     stream=True,
     stream_options={"include_usage": True},
 )
@@ -60,10 +60,10 @@ for chunk in stream:
         print("\\n", chunk.usage)`;
   const js = `import OpenAI from "openai";
 
-const client = new OpenAI({ baseURL: "${base}", apiKey: process.env.TIDE_API_KEY });
+const client = new OpenAI({ baseURL: "${base}", apiKey: process.env.WHIR_API_KEY });
 
 const res = await client.chat.completions.create({
-  model: "tide-max-think",          // "-think" suffix = reasoning on
+  model: "whir-max-think",          // "-think" suffix = reasoning on
   messages: [{ role: "user", content: "Plan a 3-day Lisbon trip." }],
 });
 console.log(res.choices[0].message.content, res.usage);`;
@@ -72,26 +72,26 @@ console.log(res.choices[0].message.content, res.usage);`;
 {
   "object": "list",
   "data": [
-    { "id": "tide-max", "name": "Tide Max", "available": true, "nodes": 12,
+    { "id": "whir-max", "name": "Whir Max", "available": true, "nodes": 12,
       "context_window": 16096,
       "pricing": { "type": "per_token", "usd_per_m_input": ${PRICE_IN_PER_M_USD}, "usd_per_m_output": ${PRICE_OUT_PER_M_USD} } },
-    { "id": "tide-lite", "name": "Tide Lite", "available": true, "nodes": 40, ... }
+    { "id": "whir-lite", "name": "Whir Lite", "available": true, "nodes": 40, ... }
   ]
 }`;
   const response = `{
   "id": "chatcmpl-…",
   "object": "chat.completion",
-  "model": "tide-max",
+  "model": "whir-max",
   "choices": [{
     "index": 0,
-    "message": { "role": "assistant", "content": "Tides are…" },
+    "message": { "role": "assistant", "content": "Sunlight scatters…" },
     "finish_reason": "stop"            // "length" if max_tokens was hit
   }],
   "usage": { "prompt_tokens": 31, "completion_tokens": 212, "total_tokens": 243, "credits": 1 }
 }`;
   const sse = `data: {"choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}], ...}
 
-data: {"choices":[{"index":0,"delta":{"content":"Tides"},"finish_reason":null}], ...}
+data: {"choices":[{"index":0,"delta":{"content":"Sunlight"},"finish_reason":null}], ...}
 
 : ping
 
@@ -101,7 +101,7 @@ data: {"choices":[],"usage":{"prompt_tokens":31,"completion_tokens":212,"total_t
 
 data: [DONE]`;
   const tools = `{
-  "model": "tide-max",
+  "model": "whir-max",
   "messages": [{"role": "user", "content": "Weather in Oslo?"}],
   "tools": [{
     "type": "function",
@@ -112,12 +112,12 @@ data: [DONE]`;
   }]
 }
 // → finish_reason "tool_calls", message.tool_calls[…]; send results back as {"role":"tool","tool_call_id":…}`;
-  const balance = `curl ${base}/balance -H "Authorization: Bearer $TIDE_API_KEY"
+  const balance = `curl ${base}/balance -H "Authorization: Bearer $WHIR_API_KEY"
 
 { "object": "balance", "credits": 4210, "usd": 4.21,
   "grant": { "plan": "pro", "total": 300, "used": 12, "remaining": 288, "resetsAt": 1767312000000 } }`;
   const node = `# 1. Get the code (Node.js 22+)
-git clone <tide repo> && cd tide && npm install
+git clone <whir repo> && cd whir && npm install
 
 # 2. Serve with Ollama (default backend)
 ollama pull qwen3:8b
@@ -134,9 +134,9 @@ npx tsx node/src/index.ts --token tnt_... --url ${origin} --backend mock`;
     <>
       <div className="page wrap">
         <div className="page-head">
-          <div className="eyebrow">docs</div>
+          <div className="kicker">API</div>
           <h1>API reference</h1>
-          <p>Tide speaks the OpenAI Chat Completions protocol. If your code works with OpenAI, it works with Tide — change the base URL and the key.</p>
+          <p>Whir speaks the OpenAI Chat Completions protocol. If your code works with OpenAI, it works with Whir — change the base URL and the key.</p>
         </div>
         <div className="docs">
           <nav className="docs-toc" aria-label="On this page">
@@ -153,8 +153,8 @@ npx tsx node/src/index.ts --token tnt_... --url ${origin} --backend mock`;
 
             <section id="auth">
               <h2>Authentication</h2>
-              <p>Send your key as a bearer token. Keys start with <code>sk-tide-</code> — create them in <Link className="link" to="/settings#keys">Settings → API keys</Link> (up to 5 per account). Keep them server-side.</p>
-              <CodeBlock code={'Authorization: Bearer sk-tide-...'} />
+              <p>Send your key as a bearer token. Keys start with <code>sk-whir-</code> — create them in <Link className="link" to="/settings#keys">Settings → API keys</Link> (up to 5 per account). Keep them server-side.</p>
+              <CodeBlock code={'Authorization: Bearer sk-whir-...'} />
             </section>
 
             <section id="models">
@@ -165,13 +165,13 @@ npx tsx node/src/index.ts --token tnt_... --url ${origin} --backend mock`;
                 <table className="table">
                   <thead><tr><th>Model id</th><th>Served by</th><th>Max output</th><th>Notes</th></tr></thead>
                   <tbody>
-                    <tr><td className="mono">tide-max</td><td>Native GPU nodes</td><td className="mono">4,096 · 8,192 thinking</td><td>Flagship. Tool calling + thinking. ~12k token prompt budget.</td></tr>
-                    <tr><td className="mono">tide-lite</td><td>Browser nodes (WebGPU)</td><td className="mono">2,048</td><td>Small and fast. ~1.8k token prompt budget; no tools.</td></tr>
-                    <tr><td className="mono">tide-dev</td><td>Mock nodes</td><td className="mono">512</td><td>Deterministic test model — development servers only.</td></tr>
+                    <tr><td className="mono">whir-max</td><td>Native GPU nodes</td><td className="mono">4,096 · 8,192 thinking</td><td>Flagship. Tool calling + thinking. ~12k token prompt budget.</td></tr>
+                    <tr><td className="mono">whir-lite</td><td>Browser nodes (WebGPU)</td><td className="mono">2,048</td><td>Small and fast. ~1.8k token prompt budget; no tools.</td></tr>
+                    <tr><td className="mono">whir-dev</td><td>Mock nodes</td><td className="mono">512</td><td>Deterministic test model — development servers only.</td></tr>
                   </tbody>
                 </table>
               </div>
-              <p>Append <code>-think</code> to any id (e.g. <code>tide-max-think</code>) — or pass <code>"think": true</code> — to let the model reason first. Reasoning arrives inline inside <code>&lt;think&gt;…&lt;/think&gt;</code>.</p>
+              <p>Append <code>-think</code> to any id (e.g. <code>whir-max-think</code>) — or pass <code>"think": true</code> — to let the model reason first. Reasoning arrives inline inside <code>&lt;think&gt;…&lt;/think&gt;</code>.</p>
               <CodeBlock code={models} />
             </section>
 
@@ -184,18 +184,18 @@ npx tsx node/src/index.ts --token tnt_... --url ${origin} --backend mock`;
                 <li><code>seed</code>, <code>steps</code> (10–60), <code>cfg</code> (1–15), <code>nsfw</code> (default <code>false</code>: sexual prompts are refused). Only <code>n: 1</code> and <code>response_format: "b64_json"</code>.</li>
               </ul>
               <CodeBlock code={`curl ${base}/images/generations \
-  -H "Authorization: Bearer sk-tide-..." -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-whir-..." -H "Content-Type: application/json" \
   -d '{"prompt": "a lighthouse at night, crashing waves", "size": "1216x832"}'
 
 # → {"created": 1790600000, "data": [{"b64_json": "iVBORw0KGgo..."}],
-#    "model": "tide-image", "seed": 2783662996, "size": "1216x832", "credits_charged": 10}`} />
+#    "model": "whir-image", "seed": 2783662996, "size": "1216x832", "credits_charged": 10}`} />
             </section>
 
             <section id="chat">
               <h2>Chat completions</h2>
               <div className="endpoint"><span className="m">POST</span>/v1/chat/completions</div>
               <ul>
-                <li><code>model</code> — a model id from <code>/v1/models</code> (default <code>tide-max</code>).</li>
+                <li><code>model</code> — a model id from <code>/v1/models</code> (default <code>whir-max</code>).</li>
                 <li><code>messages</code> — roles <code>system</code>, <code>developer</code>, <code>user</code>, <code>assistant</code>, <code>tool</code>. Content may be a string or text parts (images are ignored). Oldest turns are trimmed to fit the model's prompt budget.</li>
                 <li><code>max_tokens</code> / <code>max_completion_tokens</code> — capped at the model's output limit. Credits are held for this amount and refunded to what's actually generated.</li>
                 <li><code>temperature</code>, <code>stream</code>, <code>stream_options.include_usage</code>, <code>tools</code>, <code>tool_choice</code> (<code>"none"</code> disables tools), <code>think</code>.</li>
@@ -214,7 +214,7 @@ npx tsx node/src/index.ts --token tnt_... --url ${origin} --backend mock`;
 
             <section id="tools">
               <h2>Tools &amp; thinking</h2>
-              <p>Tool definitions are passed through to <code>tide-max</code> nodes that support function calling. When the model calls tools the response has <code>finish_reason: "tool_calls"</code> and <code>message.tool_calls</code>; run them and send the results back as <code>tool</code> messages.</p>
+              <p>Tool definitions are passed through to <code>whir-max</code> nodes that support function calling. When the model calls tools the response has <code>finish_reason: "tool_calls"</code> and <code>message.tool_calls</code>; run them and send the results back as <code>tool</code> messages.</p>
               <CodeBlock code={tools} />
             </section>
 
@@ -250,8 +250,8 @@ npx tsx node/src/index.ts --token tnt_... --url ${origin} --backend mock`;
               <h2>Run a node</h2>
               <p>Anyone can serve the network and earn USDC: nodes receive 70% of what users pay for the tokens they generate.</p>
               <ul>
-                <li><b>Browser node</b> — open <Link className="link" to="/earn">Earn</Link>, sign in, click <i>Start earning</i>. Runs Qwen3 over WebGPU and serves <code>tide-lite</code>.</li>
-                <li><b>Native node</b> — create a node token (<code>tnt_…</code>) on the Earn page, then run the node agent. It benchmarks your backend (minimum 5 tok/s) and serves <code>tide-max</code>.</li>
+                <li><b>Browser node</b> — open <Link className="link" to="/earn">Earn</Link>, sign in, click <i>Start earning</i>. Runs Qwen3 over WebGPU and serves <code>whir-lite</code>.</li>
+                <li><b>Native node</b> — create a node token (<code>tnt_…</code>) on the Earn page, then run the node agent. It benchmarks your backend (minimum 5 tok/s) and serves <code>whir-max</code>.</li>
               </ul>
               <CodeBlock code={node} />
               <p>Nodes are verified with hidden canary prompts and speed/coherence checks. Nodes that return fake output are not paid and get banned.</p>

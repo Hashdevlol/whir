@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { ChatMessage, SubmitAck, Usage } from '@tide/shared';
+import type { ChatMessage, SubmitAck, Usage } from '@whir/shared';
 import { useAuth } from '../lib/auth';
 import { api, errMsg } from '../lib/api';
 import { getSocket, socketReady, useNetworkStats } from '../lib/socket';
@@ -16,13 +16,13 @@ import { IconArrow, IconChevron, IconMenu, IconPlus, IconRefresh, IconSend, Icon
 import { fmtInt, timeAgo } from '../lib/format';
 import { PENDING_PROMPT_KEY } from './Home';
 
-const MODEL_KEY = 'tide_model';
-const THINK_KEY = 'tide_think';
-const ACTIVE_KEY = 'tide_chat_active';
+const MODEL_KEY = 'whir_model';
+const THINK_KEY = 'whir_think';
+const ACTIVE_KEY = 'whir_chat_active';
 const CONTINUE_PROMPT = 'Continue exactly where you left off. Do not repeat what you already wrote.';
 
 const SUGGESTIONS = [
-  { t: 'Explain', d: 'how ocean tides actually work, simply' },
+  { t: 'Explain', d: 'how rainbows actually form, simply' },
   { t: 'Write', d: 'a Python script that renames photos by date taken' },
   { t: 'Compare', d: 'SQLite vs Postgres for a side project' },
   { t: 'Plan', d: 'a 3-day trip to Lisbon on a budget' },
@@ -432,7 +432,7 @@ export default function Chat() {
                 <AssistantMessage
                   key={m.id}
                   m={m}
-                  modelName={models.find((x) => x.id === m.model)?.name ?? m.model ?? 'Tide'}
+                  modelName={models.find((x) => x.id === m.model)?.name ?? m.model ?? 'Whir'}
                   isLast={m.id === lastAssistantId}
                   busy={busy}
                   onRegenerate={regenerate}
@@ -445,7 +445,7 @@ export default function Chat() {
         ) : (
           <div className="welcome">
             <LogoMark size={48} />
-            <h1>What should the network <em>think</em> about?</h1>
+            <h1>What’s on your mind?</h1>
             <p className="muted">
               {stats ? `${fmtInt(stats.nodesOnline)} node${stats.nodesOnline === 1 ? '' : 's'} online` : 'Connecting…'} · prompts are never stored
             </p>
@@ -468,7 +468,7 @@ export default function Chat() {
               ref={taRef}
               rows={1}
               value={input}
-              placeholder={current ? `Message ${current.name}…` : 'Message Tide…'}
+              placeholder={current ? `Message ${current.name}…` : 'Message Whir…'}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {

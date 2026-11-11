@@ -1,24 +1,24 @@
 # Current
 
-**The sharded serving engine behind the Tide network** — one model, split across a swarm of
-consumer GPUs on the open internet. Current is how Tide serves models far larger than any single
+**The sharded serving engine behind the Whir network** — one model, split across a swarm of
+consumer GPUs on the open internet. Current is how Whir serves models far larger than any single
 card: each node holds a contiguous block of layers, activations stream through the ring, and every
-generated token is backed by a signed receipt that the Tide orchestrator verifies before paying the
+generated token is backed by a signed receipt that the Whir orchestrator verifies before paying the
 nodes that served it.
 
 > **Attribution.** Current is a fork of [Shard](https://github.com/leyten/shard) by leyten
 > (commit `fcf7280`, Apache License 2.0). The engine, benchmarks and receipts below are Shard's
-> work; see `NOTICE` for the full attribution and the list of Tide modifications. The Python
+> work; see `NOTICE` for the full attribution and the list of Whir modifications. The Python
 > package keeps its original import name (`shard`) so upstream fixes merge cleanly.
 
-### How Tide uses Current
+### How Whir uses Current
 
-| Tide component | Current entry point |
+| Whir component | Current entry point |
 | --- | --- |
 | orchestrator placement | `python -m shard.plan` (stdin: candidates + RTT matrix → stage plan) |
 | receipt verification before payout | `python -m shard.verify` |
 | spot-check challenges | `python -m shard.challenge` |
-| node daemon (`tide-node --mode current`, planned) | `shard.node` stage + `shard.coordinate` head |
+| node daemon (`whir-node --mode current`, planned) | `shard.node` stage + `shard.coordinate` head |
 
 ---
 

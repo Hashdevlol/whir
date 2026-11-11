@@ -4,7 +4,7 @@ import {
   CREDITS_PER_USD, CREDITS_PER_USD_PURCHASED, PLANS, PRICE_IN_PER_M_USD, PRICE_OUT_PER_M_USD,
   type ChatMessage, type ErrorCode, type PlanId,
   IMAGE_CREDITS, IMAGE_MODEL, normalizeImageParams, type ImageParams,
-} from '@tide/shared';
+} from '@whir/shared';
 import { db, now, utcDay } from './db.ts';
 import { config } from './config.ts';
 import {
@@ -302,12 +302,12 @@ export function createApi(orch: Orchestrator) {
   v1.get('/models', (_req, res) => {
     res.json({
       object: 'list',
-      image_models: [{ id: IMAGE_MODEL, object: 'model', owned_by: 'tide', available: orch.stats().imageNodes > 0, nodes: orch.stats().imageNodes, pricing: { type: 'per_image', credits: IMAGE_CREDITS } }],
+      image_models: [{ id: IMAGE_MODEL, object: 'model', owned_by: 'whir', available: orch.stats().imageNodes > 0, nodes: orch.stats().imageNodes, pricing: { type: 'per_image', credits: IMAGE_CREDITS } }],
       data: publicCatalog().map((m) => ({
         id: m.id,
         object: 'model',
         created: 1767225600,
-        owned_by: 'tide',
+        owned_by: 'whir',
         name: m.name,
         description: m.description,
         available: orch.modelAvailability(m.id) > 0,
@@ -363,7 +363,7 @@ export function createApi(orch: Orchestrator) {
     const includeUsage = !!body.stream_options?.include_usage;
     const id = 'chatcmpl-' + randomUUID().replace(/-/g, '').slice(0, 24);
     const created = Math.floor(now() / 1000);
-    const modelId = model ?? 'tide-max';
+    const modelId = model ?? 'whir-max';
     let started = false;
     let finished = false;
     let ping: NodeJS.Timeout | undefined;

@@ -1,10 +1,10 @@
 import { config } from './config.ts';
-import { createTideServer } from './app.ts';
+import { createWhirServer } from './app.ts';
 
-const server = createTideServer();
+const server = createWhirServer();
 
 server.http.listen(config.port, config.host, () => {
-  console.log(`tide server listening on http://localhost:${config.port}`);
+  console.log(`whir server listening on http://localhost:${config.port}`);
 });
 
 process.on('unhandledRejection', (e) => console.error('unhandledRejection', e));

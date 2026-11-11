@@ -1,7 +1,8 @@
-export const fmtInt = (n: number | null | undefined) => Math.round(n ?? 0).toLocaleString('en-US');
+export const fmtInt = (n: number | null | undefined) => (n == null ? '—' : Math.round(n).toLocaleString('en-US'));
 
 export function fmtCompact(n: number | null | undefined): string {
-  const v = n ?? 0;
+  if (n == null) return '—';
+  const v = n;
   if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B';
   if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M';
   if (v >= 1e4) return (v / 1e3).toFixed(1) + 'K';
@@ -9,7 +10,8 @@ export function fmtCompact(n: number | null | undefined): string {
 }
 
 export function fmtUsd(n: number | null | undefined, digits = 2): string {
-  const v = n ?? 0;
+  if (n == null) return '—';
+  const v = n;
   const d = v !== 0 && Math.abs(v) < 0.01 ? 4 : digits;
   return '$' + v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 }

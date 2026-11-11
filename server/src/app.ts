@@ -7,9 +7,9 @@ import { config } from './config.ts';
 import { Orchestrator } from './orchestrator.ts';
 import { createApi } from './api.ts';
 
-export interface TideServer { http: HttpServer; io: Server; orch: Orchestrator; close(): Promise<void> }
+export interface WhirServer { http: HttpServer; io: Server; orch: Orchestrator; close(): Promise<void> }
 
-export function createTideServer(): TideServer {
+export function createWhirServer(): WhirServer {
   const app = express();
   app.set('trust proxy', true);
   app.use((req, res, next) => {

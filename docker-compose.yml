@@ -1,11 +1,11 @@
 services:
-  tide:
+  whir:
     build: .
     restart: unless-stopped
     env_file: server/.env
     environment:
       NODE_ENV: production
     ports: ["3001:3001"]
-    volumes: ["tide-data:/data"]
+    volumes: ["whir-data:/data"]
 volumes:
-  tide-data:
+  whir-data:

@@ -9,14 +9,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { io as ioc, type Socket } from 'socket.io-client';
-import type { JobNewMsg } from '@tide/shared';
+import type { JobNewMsg } from '@whir/shared';
 
-process.env.TIDE_DB = join(mkdtempSync(join(tmpdir(), 'tide-net-')), 't.db');
+process.env.WHIR_DB = join(mkdtempSync(join(tmpdir(), 'whir-net-')), 't.db');
 process.env.ADMIN_SECRET = 'test-admin-secret-0123456789';
-const { createTideServer } = await import('../src/app.ts');
+const { createWhirServer } = await import('../src/app.ts');
 const { db } = await import('../src/db.ts');
 
-const server = createTideServer();
+const server = createWhirServer();
 await new Promise<void>((r) => server.http.listen(0, '127.0.0.1', () => r()));
 const BASE = `http://127.0.0.1:${(server.http.address() as AddressInfo).port}`;
 const sockets: Socket[] = [];
@@ -40,7 +40,7 @@ const honest: Behaviour = async (job, s) => {
   const last = job.messages.at(-1)!.content;
   const nums = last.match(/\b\d+\b/g)?.map(Number) ?? [];
   const word = last.match(/\b[A-Z]{4,6}\b/)?.[0];
-  const reply = nums.length >= 2 && word ? `${nums[0] + nums[1]} ${word}` : 'Tides are caused by the gravitational pull of the moon and the sun on the oceans of the earth.';
+  const reply = nums.length >= 2 && word ? `${nums[0] + nums[1]} ${word}` : 'Rainbows form when sunlight is refracted, reflected and dispersed inside raindrops.';
   let text = '';
   for (const w of reply.split(/(?<=\s)/)) { await sleep(10); text += w; s.emit('job:token', { jobId: job.jobId, token: w }); }
   s.emit('job:complete', { jobId: job.jobId, response: text, tokensGenerated: text.split(' ').length });
@@ -50,13 +50,13 @@ async function makeNode(ownerName: string, behaviour: Behaviour, tokPerSec = 30)
   const { token } = await post('/api/auth/dev', { name: ownerName });
   const { token: nt } = await post('/api/node-tokens', {}, token);
   const s = await connect(nt);
-  const ack: any = await s.emitWithAck('node:register', { model: 'tide-dev', tokPerSec, type: 'native' });
+  const ack: any = await s.emitWithAck('node:register', { model: 'whir-dev', tokPerSec, type: 'native' });
   assert.ok(ack.nodeId, JSON.stringify(ack));
   s.on('job:new', (job: JobNewMsg) => void behaviour(job, s));
   return { s, session: token as string, nodeId: ack.nodeId as string };
 }
 
-function chat(s: Socket, content: string, model = 'tide-dev') {
+function chat(s: Socket, content: string, model = 'whir-dev') {
   return new Promise<{ ack: any; tokens: string[]; done?: any; error?: any }>((resolve) => {
     const out: { ack: any; tokens: string[]; done?: any; error?: any } = { ack: null, tokens: [] };
     const onTok = (m: any) => m.jobId === out.ack?.jobId && out.tokens.push(m.token);
@@ -76,10 +76,10 @@ test('registration rules', async () => {
   const { token: nt } = await post('/api/node-tokens', {}, token);
   const s = await connect(nt);
   assert.match((await s.emitWithAck('node:register', { model: 'gpt-4', tokPerSec: 50, type: 'native' })).error, /not served/);
-  assert.match((await s.emitWithAck('node:register', { model: 'tide-dev', tokPerSec: 1, type: 'native' })).error, /Too slow/);
+  assert.match((await s.emitWithAck('node:register', { model: 'whir-dev', tokPerSec: 1, type: 'native' })).error, /Too slow/);
   const anon = await post('/api/auth/anon', {});
   const a = await connect(anon.token);
-  assert.match((await a.emitWithAck('node:register', { model: 'tide-dev', tokPerSec: 50, type: 'native' })).error, /Sign in/);
+  assert.match((await a.emitWithAck('node:register', { model: 'whir-dev', tokPerSec: 50, type: 'native' })).error, /Sign in/);
   s.close(); a.close();
 });
 
@@ -96,10 +96,10 @@ test('anon chat streams through a node, owner is paid from the subsidy', async (
   const node = await makeNode('owner-1', honest);
   const anon = await post('/api/auth/anon', {});
   const c = await connect(anon.token);
-  const r = await chat(c, 'What causes tides?');
+  const r = await chat(c, 'What causes rainbows?');
   assert.equal(r.ack.lane, 'free');
   assert.ok(r.done, JSON.stringify(r.error));
-  assert.match(r.tokens.join(''), /moon/);
+  assert.match(r.tokens.join(''), /sunlight/);
   assert.equal(r.done.usage.outputTokens, r.tokens.length);
   const me = await get('/api/me', anon.token);
   assert.equal(me.freePrompts.remaining, 4);
@@ -118,7 +118,7 @@ test('node error before any token -> full refund; disconnect -> requeued to anot
   const { key } = await post('/api/api-keys', {}, token);
   const res = await fetch(BASE + '/v1/chat/completions', {
     method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model: 'tide-dev', messages: [{ role: 'user', content: 'hi' }] }),
+    body: JSON.stringify({ model: 'whir-dev', messages: [{ role: 'user', content: 'hi' }] }),
   });
   assert.equal(res.status, 503);
   assert.equal((await get('/api/credits', token)).balance, 100);
@@ -131,9 +131,9 @@ test('node error before any token -> full refund; disconnect -> requeued to anot
   const good = await makeNode('owner-good', honest);
   const r = await fetch(BASE + '/v1/chat/completions', {
     method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model: 'tide-dev', messages: [{ role: 'user', content: 'hi' }] }),
+    body: JSON.stringify({ model: 'whir-dev', messages: [{ role: 'user', content: 'hi' }] }),
   }).then((x) => x.json() as Promise<any>);
-  assert.match(r.choices[0].message.content, /moon/, JSON.stringify(r));
+  assert.match(r.choices[0].message.content, /sunlight/, JSON.stringify(r));
   assert.equal(r.usage.credits, 1);
   assert.equal((await get('/api/credits', token)).balance, 99);
   flaky.s.close(); good.s.close();
@@ -147,7 +147,7 @@ test('streaming API with usage chunk', async () => {
   const { key } = await post('/api/api-keys', {}, token);
   const res = await fetch(BASE + '/v1/chat/completions', {
     method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model: 'tide-dev', stream: true, stream_options: { include_usage: true }, messages: [{ role: 'user', content: 'tides?' }] }),
+    body: JSON.stringify({ model: 'whir-dev', stream: true, stream_options: { include_usage: true }, messages: [{ role: 'user', content: 'rainbows?' }] }),
   });
   assert.equal(res.headers.get('content-type'), 'text/event-stream');
   const body = await res.text();
@@ -158,7 +158,7 @@ test('streaming API with usage chunk', async () => {
   assert.equal(parsed.at(-2).choices[0].finish_reason, 'stop');
   assert.ok(parsed.at(-1).usage.completion_tokens > 5);
   const text = parsed.map((p) => p.choices[0]?.delta?.content ?? '').join('');
-  assert.match(text, /gravitational/);
+  assert.match(text, /refracted/);
   node.s.close();
   await sleep(50);
 });
@@ -194,7 +194,7 @@ test('cheating nodes: impossible speed earns nothing; failed canaries get banned
     await sleep(100);
   }
   await kicked;
-  const again = await liar.s.emitWithAck('node:register', { model: 'tide-dev', tokPerSec: 30, type: 'native' });
+  const again = await liar.s.emitWithAck('node:register', { model: 'whir-dev', tokPerSec: 30, type: 'native' });
   assert.match(again.error, /banned/);
 
   // An honest node passes.
@@ -219,7 +219,7 @@ test('abort mid-stream bills only what was delivered', async () => {
   const ctl = new AbortController();
   const res = await fetch(BASE + '/v1/chat/completions', {
     method: 'POST', signal: ctl.signal, headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model: 'tide-dev', stream: true, messages: [{ role: 'user', content: 'count' }] }),
+    body: JSON.stringify({ model: 'whir-dev', stream: true, messages: [{ role: 'user', content: 'count' }] }),
   });
   const reader = res.body!.getReader();
   await reader.read(); await reader.read();
@@ -232,23 +232,23 @@ test('abort mid-stream bills only what was delivered', async () => {
 
 test('chat web_search: node calls the tool, orchestrator searches, answer continues with sources', async () => {
   const { searchProvider } = await import('../src/search.ts');
-  searchProvider.run = async (q: string) => [{ title: 'Tide tables', url: 'https://example.com/tides', description: `results for ${q}`, content: 'High tide at 14:05.' }];
+  searchProvider.run = async (q: string) => [{ title: 'Sunrise times', url: 'https://example.com/sunrise', description: `results for ${q}`, content: 'Sunrise at 06:42.' }];
   const seen: JobNewMsg[] = [];
   const { token } = await post('/api/auth/dev', { name: 'owner-tools' });
   const { token: nt } = await post('/api/node-tokens', {}, token);
   const s = await connect(nt);
-  await s.emitWithAck('node:register', { model: 'tide-dev', tokPerSec: 30, type: 'native', capabilities: { tools: true } });
+  await s.emitWithAck('node:register', { model: 'whir-dev', tokPerSec: 30, type: 'native', capabilities: { tools: true } });
   s.on('job:new', async (job: JobNewMsg) => {
     seen.push(job);
     if (seen.length === 1) {
       assert.equal((job.tools as any[])?.[0]?.function?.name, 'web_search');
       s.emit('job:token', { jobId: job.jobId, token: 'Let me check. ' });
       s.emit('job:complete', { jobId: job.jobId, response: 'Let me check. ', tokensGenerated: 3, doneReason: 'tool_calls',
-        toolCalls: [{ id: 'c1', type: 'function', function: { name: 'web_search', arguments: '{"query":"high tide today"}' } }] });
+        toolCalls: [{ id: 'c1', type: 'function', function: { name: 'web_search', arguments: '{"query":"sunrise today"}' } }] });
     } else {
       const tool = job.messages.find((m) => m.role === 'tool');
-      assert.match(tool!.content, /High tide at 14:05/);
-      const words = 'According to example.com high tide today is at 14:05 in the afternoon local time.'.split(/(?<=\s)/);
+      assert.match(tool!.content, /Sunrise at 06:42/);
+      const words = 'According to example.com sunrise today is at 06:42 in the morning local time.'.split(/(?<=\s)/);
       for (const w of words) { await sleep(5); s.emit('job:token', { jobId: job.jobId, token: w }); }
       s.emit('job:complete', { jobId: job.jobId, response: words.join(''), tokensGenerated: words.length });
     }
@@ -259,11 +259,11 @@ test('chat web_search: node calls the tool, orchestrator searches, answer contin
   let searched = '';
   c.on('job:searching', (m) => { searched = m.query; });
   c.on('job:sources', (m) => sources.push(...m.sources));
-  const r = await chat(c, 'When is high tide today?');
+  const r = await chat(c, 'When is sunrise today?');
   assert.ok(r.done, JSON.stringify(r.error));
   assert.equal(seen.length, 2);
-  assert.equal(searched, 'high tide today');
-  assert.equal(sources[0].url, 'https://example.com/tides');
+  assert.equal(searched, 'sunrise today');
+  assert.equal(sources[0].url, 'https://example.com/sunrise');
   assert.match(r.tokens.join(''), /Let me check\. According to example\.com/);
   assert.ok(r.done.usage.outputTokens >= 10);
   s.close();
@@ -304,7 +304,7 @@ test('image lane: generate, bill 10 credits, reject wrong-size PNGs, gate anon +
   const { token: ot } = await post('/api/auth/dev', { name: 'owner-image' });
   const { token: nt } = await post('/api/node-tokens', {}, ot);
   const s = await connect(nt);
-  const ack: any = await s.emitWithAck('node:register', { model: 'tide-image', tokPerSec: 0, type: 'image' });
+  const ack: any = await s.emitWithAck('node:register', { model: 'whir-image', tokPerSec: 0, type: 'image' });
   assert.ok(ack.nodeId, JSON.stringify(ack));
   s.on('image:job', ({ jobId, params }: any) => {
     const w = cheat ? 64 : params.width, h = cheat ? 64 : params.height;

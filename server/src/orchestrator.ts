@@ -6,7 +6,7 @@ import {
   type Lane, type NetworkStats, type NodeStatus, type NodeType, type RegisterAck, type RegisterPayload,
   type SubmitAck, type SubmitPayload, type ToolCall, type Usage,
   IMAGE_CREDITS, IMAGE_MODEL, type ImageFailedMsg, type ImageJobMsg, type ImageParams, type ImageResultMsg,
-} from '@tide/shared';
+} from '@whir/shared';
 import { config } from './config.ts';
 import { db, now } from './db.ts';
 import { hashIp, resolveToken, type Principal, type User } from './auth.ts';
@@ -122,7 +122,7 @@ export interface SubmitRequest {
 }
 
 const NATIVE_SYSTEM = (search = false) =>
-  `You are Tide, an open model served by a decentralized network of GPUs. Today is ${new Date().toISOString().slice(0, 10)}. ` +
+  `You are Whir, an open model served by a decentralized network of GPUs. Today is ${new Date().toISOString().slice(0, 10)}. ` +
   `Answer directly and helpfully.` +
   (search ? ' You can call web_search for anything recent or time-sensitive (news, prices, current events) or facts you are unsure of; cite the URLs you use.' : '');
 
@@ -890,7 +890,7 @@ export class Orchestrator {
   // ------------------------------------------------------------------ canaries
   private sendCanary(node: NodeRec) {
     if (!this.nodes.has(node.id) || node.status !== 'idle' || this.queue.length > 0) return;
-    const entry = [...[resolveModel('tide-max'), resolveModel('tide-lite'), resolveModel('tide-dev')]]
+    const entry = [...[resolveModel('whir-max'), resolveModel('whir-lite'), resolveModel('whir-dev')]]
       .map((r) => r?.entry).find((e) => e && nodeServes(e, node.model, node.type));
     if (!entry) return;
     const c = makeCanary();
@@ -946,7 +946,7 @@ export class Orchestrator {
     const nodes = [...this.nodes.values()].filter((n) => n.accountAgeOk || !config.isProd);
     const byModel: Record<string, number> = {};
     for (const n of nodes) {
-      const e = [resolveModel('tide-max'), resolveModel('tide-lite'), resolveModel('tide-dev')].map((r) => r?.entry).find((x) => x && nodeServes(x, n.model, n.type));
+      const e = [resolveModel('whir-max'), resolveModel('whir-lite'), resolveModel('whir-dev')].map((r) => r?.entry).find((x) => x && nodeServes(x, n.model, n.type));
       if (e) byModel[e.id] = (byModel[e.id] ?? 0) + 1;
       else if (n.type === 'image') byModel[IMAGE_MODEL] = (byModel[IMAGE_MODEL] ?? 0) + 1;
     }

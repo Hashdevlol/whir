@@ -1,6 +1,6 @@
-# Tide
+# Whir
 
-**Compute that flows where it's needed.** Tide is an open network for decentralized AI inference:
+**Compute that flows where it's needed.** Whir is an open network for decentralized AI inference:
 anyone can plug in a GPU and earn for every token it serves, and anyone can use open models through an
 OpenAI-compatible API — no account wall, no prompt storage.
 
@@ -9,7 +9,7 @@ OpenAI-compatible API — no account wall, no prompt storage.
         │ prompt                                  │
         ▼                                         ▼
   ┌──────────────┐   job    ┌───────────────────────────┐   job:new   ┌────────────────────────┐
-  │ web + /v1 API │ ───────▶ │ orchestrator (socket.io)  │ ──────────▶ │ tide-node (Ollama /    │
+  │ web + /v1 API │ ───────▶ │ orchestrator (socket.io)  │ ──────────▶ │ whir-node (Ollama /    │
   │ (express)     │ ◀─────── │ queue · routing · billing │ ◀────────── │ llama.cpp / vLLM)      │
   └──────────────┘  tokens  │ canaries · anti-cheat     │   tokens    │ browser node (WebGPU)  │
                             └─────────────┬─────────────┘             └────────────────────────┘
@@ -23,7 +23,7 @@ OpenAI-compatible API — no account wall, no prompt storage.
 | --- | --- |
 | `shared/` | wire types + economics constants shared by everything |
 | `server/` | HTTP API, OpenAI-compatible `/v1`, orchestrator, billing, USDC rails on Solana, admin console |
-| `node/` | `tide-node` — the agent a GPU owner runs (backends: Ollama, any OpenAI-compatible server, mock) |
+| `node/` | `whir-node` — the agent a GPU owner runs (backends: Ollama, any OpenAI-compatible server, mock) |
 | `web/` | React app: landing, chat, earn (incl. in-browser WebGPU node), pricing, settings, network, docs |
 | `current/` | **Current**, the sharded multi-GPU engine — a fork of [leyten/shard](https://github.com/leyten/shard) (Apache-2.0, see `current/NOTICE`) |
 
@@ -42,19 +42,19 @@ Serve something so chat has a node:
 2. Run a node:
 
 ```bash
-# mock model, no GPU needed (serves "tide-dev", dev servers only)
+# mock model, no GPU needed (serves "whir-dev", dev servers only)
 npx tsx node/src/index.ts --token tnt_… --url http://localhost:3001 --backend mock
 
-# real model through Ollama (pulls qwen3:8b, builds "tide-max")
+# real model through Ollama (pulls qwen3:8b, builds "whir-max")
 npx tsx node/src/index.ts --token tnt_… --url http://localhost:3001 --base-model qwen3:8b
 
 # llama.cpp / LM Studio / vLLM / SGLang
 npx tsx node/src/index.ts --token tnt_… --backend openai --upstream http://127.0.0.1:8080/v1 --upstream-model my-model
 ```
 
-Or open **Earn → In this browser** to serve `tide-lite` from a WebGPU tab.
+Or open **Earn → In this browser** to serve `whir-lite` from a WebGPU tab.
 
-Swarm nodes (experimental) split one big model across several GPUs with Current and serve `tide-swarm`:
+Swarm nodes (experimental) split one big model across several GPUs with Current and serve `whir-swarm`:
 
 ```bash
 npx tsx node/src/index.ts --mode current --token tnt_… --current-dir ./current --model-dir /models/m25   --sidecar ./current/sidecar/sidecar          # add --dry-run to see the exact engine commands
@@ -79,15 +79,15 @@ docker compose up -d --build                                   # server + keeper
 
 Put it behind a TLS proxy (Caddy / nginx) that forwards websockets (`/socket.io/`) and sets
 `X-Forwarded-For`. Configuration lives in `server/.env` (see `server/.env.example`); in production set at
-least `TIDE_SECRET`, and `TREASURY_WALLET_KEY` + `DEPOSIT_WALLET_KEY` + `SOLANA_CLUSTER=mainnet-beta` +
+least `WHIR_SECRET`, and `TREASURY_WALLET_KEY` + `DEPOSIT_WALLET_KEY` + `SOLANA_CLUSTER=mainnet-beta` +
 `USDC_MINT` for real payments. Production disables dev login, test credits and the mock model.
 
 ## API
 
 ```bash
 curl http://localhost:3001/v1/chat/completions \
-  -H "Authorization: Bearer sk-tide-…" -H "Content-Type: application/json" \
-  -d '{"model":"tide-max","stream":true,"messages":[{"role":"user","content":"explain tides in one line"}]}'
+  -H "Authorization: Bearer sk-whir-…" -H "Content-Type: application/json" \
+  -d '{"model":"whir-max","stream":true,"messages":[{"role":"user","content":"explain why the sky is blue in one line"}]}'
 ```
 
 `GET /v1/models` · `POST /v1/chat/completions` (streaming, `stream_options.include_usage`, tool-call
@@ -128,12 +128,12 @@ cd current && python -m pytest tests/test_plan.py tests/test_verify*.py   # Curr
 | ✅ | orchestrator, billing lanes, OpenAI API, node agent (Ollama / OpenAI-compat / mock), anti-cheat, web app |
 | ✅ | USDC deposits + plan checkout + payouts (code complete; devnet run needs a funded treasury) |
 | ✅ | Current swarm control plane: key-proven announce, RTT mesh, `shard.plan` placement, ring assign/ready, head-routed jobs, `shard.verify` receipt settlement, pay-by-layers, dissolve/re-form (tested with fake rings + the real Python planner/verifier) |
-| ⏳ | `tide-node --mode current` engine launch (sidecar + `shard.stage` + `shard.coordinate`) — dry-run verified; needs Linux + NVIDIA GPUs + model weights |
+| ⏳ | `whir-node --mode current` engine launch (sidecar + `shard.stage` + `shard.coordinate`) — dry-run verified; needs Linux + NVIDIA GPUs + model weights |
 | ✅ | chat web search (`web_search` tool: Brave with `BRAVE_API_KEY`, otherwise keyless DuckDuckGo) |
 | ✅ | image generation: `/create` studio, `/v1/images/generations`, image nodes via ComfyUI (`--mode image`), 10 credits/image |
 | ✅ | operator console at `/admin` (set `ADMIN_SECRET`) |
 
 ## Attribution
 
-Tide is a clean-room reimplementation inspired by [c0mpute / compute.tech](https://compute.tech); no code
+Whir is a clean-room reimplementation inspired by [c0mpute / compute.tech](https://compute.tech); no code
 from `leyten/c0mpute` (unlicensed) is included. `current/` is a fork of `leyten/shard` under Apache-2.0.

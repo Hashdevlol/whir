@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-const target = process.env.TIDE_API ?? 'http://localhost:3001';
+const target = process.env.WHIR_API ?? 'http://localhost:3001';
 
 export default defineConfig({
   plugins: [react()],

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { PlanId } from '@tide/shared';
+import type { PlanId } from '@whir/shared';
 import { api, errMsg } from './api';
 
 export interface PlanIntent { id: number; plan: PlanId; months: number; expected_usd: number; paid_usd: number; expires_at: number }

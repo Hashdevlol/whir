@@ -135,7 +135,7 @@ export type PlanId = keyof typeof PLANS;
 export const estimateTokens = (s: string) => Math.ceil((s?.length ?? 0) / 4);
 
 // ---- image generation ----
-export const IMAGE_MODEL = 'tide-image';
+export const IMAGE_MODEL = 'whir-image';
 export const IMAGE_CREDITS = 10; // flat price per image (~$0.01)
 
 export interface ImageParams {

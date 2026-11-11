@@ -2,7 +2,7 @@ import { API_URL } from '../lib/api';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { fmtDate, fmtInt, fmtUsd, shortAddr, timeAgo } from '../lib/format';
 
-const KEY = 'tide_admin_token';
+const KEY = 'whir_admin_token';
 
 async function adm<T = any>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(API_URL + '/api/admin' + path, {
@@ -39,7 +39,7 @@ export default function Admin() {
     <div className="page wrap stack" style={{ gap: 22 }}>
       <div className="row-between">
         <div>
-          <div className="eyebrow">operator console</div>
+          <div className="kicker">Operator console</div>
           <h1 style={{ fontSize: 34 }}>Admin</h1>
         </div>
         <button className="btn btn-ghost btn-sm" onClick={() => { sessionStorage.removeItem(KEY); setAuthed(false); }}>Lock</button>

@@ -3,7 +3,7 @@ import { api, ApiError, getToken, setToken } from './api';
 import { base58Encode } from './base58';
 import type { Me, PricingConfig, SolanaProvider } from './types';
 
-const REF_KEY = 'tide_ref';
+const REF_KEY = 'whir_ref';
 const REF_TTL = 30 * 86_400_000;
 
 /** Capture ?ref=CODE into localStorage for 30 days. */

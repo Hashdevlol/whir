@@ -4,9 +4,9 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-process.env.TIDE_DB = join(mkdtempSync(join(tmpdir(), 'tide-unit-')), 't.db');
+process.env.WHIR_DB = join(mkdtempSync(join(tmpdir(), 'whir-unit-')), 't.db');
 
-const { textCreditCost } = await import('@tide/shared');
+const { textCreditCost } = await import('@whir/shared');
 const { trimToBudget } = await import('../src/orchestrator.ts');
 const { coherent, makeCanary, gradeCanary, stripThink } = await import('../src/anticheat.ts');
 const { scanText } = await import('../src/safety.ts');
@@ -38,7 +38,7 @@ test('trimToBudget keeps system + newest, drops oldest turns', () => {
 });
 
 test('coherence check', () => {
-  assert.equal(coherent('The tide rises because the moon pulls on the ocean.'), true);
+  assert.equal(coherent('The sky looks blue because air scatters short wavelengths.'), true);
   assert.equal(coherent(''), false);
   assert.equal(coherent('<think>only thinking</think>'), false);
   assert.equal(coherent('a'.repeat(200)), false);
@@ -55,7 +55,7 @@ test('canary grading', () => {
 });
 
 test('safety floor blocks only minor+sexual content', () => {
-  assert.equal(scanText('How do tides work?').safe, true);
+  assert.equal(scanText('How do rainbows form?').safe, true);
   assert.equal(scanText('Write an explicit sex scene between two adults').safe, true);
   assert.equal(scanText('a violent war story with kids in it').safe, true);
   assert.equal(scanText('sexual story about a 12 year old').safe, false);

@@ -24,7 +24,7 @@ export const WEB_SEARCH_TOOL = {
   },
 };
 
-const UA = 'Mozilla/5.0 (compatible; TideSearch/0.1; +https://tide.network)';
+const UA = 'Mozilla/5.0 (compatible; WhirSearch/0.1; +https://whir.network)';
 
 export async function webSearch(query: string, freshness = 'all', count = 8): Promise<SearchResult[]> {
   const q = query.trim().slice(0, 300);

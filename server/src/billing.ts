@@ -1,6 +1,6 @@
 import {
   CREDITS_PER_USD, NODE_SHARE, PLANS, REFERRAL_SHARE, type ErrorCode, type Lane, type PlanId,
-} from '@tide/shared';
+} from '@whir/shared';
 import { db, now, tx, utcDay, utcHour } from './db.ts';
 import { config } from './config.ts';
 import type { User } from './auth.ts';

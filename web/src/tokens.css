@@ -1,0 +1,22 @@
+/* Whir design tokens */
+:root{
+  --whir-white:#FFFFFF; --whir-paper:#F5F5F7; --whir-mist:#D2D2D7; --whir-hairline:#E5E5EA;
+  --whir-graphite:#6E6E73; --whir-ink:#1D1D1F; --whir-black:#000000;
+  --whir-led:#FF9F0A;            /* the only accent: "running" / live states. Never for buttons or large fills. */
+  --whir-led-halo:rgba(255,159,10,.16);
+  --whir-font:"Inter","Inter Display",-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --whir-mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --whir-display:clamp(48px,7vw,96px); --whir-h2:clamp(36px,4.6vw,56px); --whir-h3:28px; --whir-body:19px; --whir-small:15px;
+  --whir-track-display:-0.045em; --whir-track-h2:-0.035em; --whir-track-body:-0.01em;
+  --whir-radius-s:10px; --whir-radius-m:18px; --whir-radius-l:28px; --whir-pill:999px;
+  --whir-shadow-1:0 1px 2px rgba(0,0,0,.05);
+  --whir-shadow-2:0 1px 2px rgba(0,0,0,.04),0 30px 80px -20px rgba(0,0,0,.18);
+  --whir-space:8px; --whir-section:160px; --whir-max:1120px;
+  --whir-ease:cubic-bezier(.2,.8,.2,1);
+}
+.whir-display{font:600 var(--whir-display)/1 var(--whir-font);letter-spacing:var(--whir-track-display);color:var(--whir-ink)}
+.whir-h2{font:600 var(--whir-h2)/1.05 var(--whir-font);letter-spacing:var(--whir-track-h2)}
+.whir-body{font:400 var(--whir-body)/1.5 var(--whir-font);letter-spacing:var(--whir-track-body);color:var(--whir-graphite)}
+.whir-btn{display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:var(--whir-pill);background:var(--whir-ink);color:#fff;font:500 17px var(--whir-font)}
+.whir-link{color:var(--whir-ink);font:500 17px var(--whir-font)}  /* append " ›" */
+.whir-led{width:9px;height:9px;border-radius:50%;background:var(--whir-led);box-shadow:0 0 0 4px var(--whir-led-halo)}

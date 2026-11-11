@@ -18,12 +18,12 @@ const RATIOS = [
   { id: 'portrait', label: 'Portrait', w: 832, h: 1216 },
   { id: 'landscape', label: 'Landscape', w: 1216, h: 832 },
 ];
-const NSFW_ACK = 'tide_nsfw_ack';
+const NSFW_ACK = 'whir_nsfw_ack';
 
 interface Item { id: string; image: string; prompt: string; style: string; width: number; height: number; seed: number; createdAt: number }
 
 // ---------------------------------------------------------------- private history (IndexedDB, this browser only)
-const DB = 'tide-create', STORE = 'images';
+const DB = 'whir-create', STORE = 'images';
 function idb(): Promise<IDBDatabase> {
   return new Promise((res, rej) => {
     const r = indexedDB.open(DB, 1);
@@ -119,7 +119,7 @@ export default function Create() {
     <div className="page wrap create">
       <div className="create-head">
         <div>
-          <div className="eyebrow">create</div>
+          <div className="kicker">Create</div>
           <h1>Images, rendered by the network.</h1>
           <p className="muted">Every image is drawn on a community GPU. 10 credits each · private history stays in this browser.</p>
         </div>
@@ -185,7 +185,7 @@ export default function Create() {
               <span className="muted" style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{current.prompt}</span>
               <span className="row" style={{ gap: 8 }}>
                 <span className="mono tiny dim">seed {current.seed} · {current.width}×{current.height}</span>
-                <a className="btn btn-ghost btn-xs" href={current.image} download={`tide-${current.seed}.png`}>Download</a>
+                <a className="btn btn-ghost btn-xs" href={current.image} download={`whir-${current.seed}.png`}>Download</a>
                 <button className="btn btn-ghost btn-xs" onClick={() => { setPrompt(current.prompt); setSeed(String(current.seed)); }}>Reuse</button>
               </span>
             </div>

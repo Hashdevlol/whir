@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires_at INTEGER NOT NULL
 );
 
--- API keys (sk-tide-...) and node tokens (tnt_...) are stored hashed only.
+-- API keys (sk-whir-...) and node tokens (tnt_...) are stored hashed only.
 CREATE TABLE IF NOT EXISTS api_keys (
   id          TEXT PRIMARY KEY,
   user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

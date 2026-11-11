@@ -1,9 +1,11 @@
-export const TOKEN_KEY = 'tide_token';
+export const TOKEN_KEY = 'whir_token';
 
 /** Backend origin. Empty = same origin (dev proxy / server-hosted build). Set VITE_API_URL when the web app is hosted separately (e.g. Vercel). */
 export const API_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/$/, '');
 /** Public origin of the API, for display (base_url, node --url). */
-export const apiOrigin = () => API_URL || location.origin;
+export const apiOrigin = () => (import.meta.env.VITE_API_PROXIED ? location.origin : API_URL || location.origin);
+/** Origin node agents connect to (socket.io needs the backend directly). */
+export const nodeOrigin = () => API_URL || location.origin;
 
 export const getToken = () => {
   try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }

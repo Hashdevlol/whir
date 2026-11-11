@@ -1,5 +1,5 @@
 {
-  "name": "@tide/shared",
+  "name": "@whir/shared",
   "private": true,
   "type": "module",
   "main": "src/index.ts",

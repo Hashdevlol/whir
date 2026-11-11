@@ -1,5 +1,5 @@
 /**
- * Swarms: one large model split across several nodes by Current (tide/current, the shard fork).
+ * Swarms: one large model split across several nodes by Current (whir/current, the shard fork).
  *
  *   node:announce  -> candidate pool (pubkey proven by signature)
  *   node:rtt       -> latency matrix
@@ -294,7 +294,7 @@ function sanitizeCap(c: NodeCap): NodeCap {
 }
 
 /** The node proves it holds the key it announces by signing a message bound to this socket. */
-export const announceMessage = (socketId: string) => `tide-swarm-announce:${socketId}`;
+export const announceMessage = (socketId: string) => `whir-swarm-announce:${socketId}`;
 function verifyAnnounce(pubkeyB64: string, sigB64: string, socketId: string): boolean {
   try {
     const raw = Buffer.from(String(pubkeyB64), 'base64');

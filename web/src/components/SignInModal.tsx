@@ -38,7 +38,7 @@ export function SignInModal() {
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="signin-title">
         <button className="icon-btn close" onClick={closeSignIn} aria-label="Close"><IconX /></button>
         <div style={{ marginBottom: 16 }}><LogoMark size={40} /></div>
-        <h2 id="signin-title">Sign in to Tide</h2>
+        <h2 id="signin-title">Sign in to Whir</h2>
         <p className="muted small" style={{ marginBottom: 20 }}>
           {signInReason ?? 'Use your Solana wallet. Signing is free — no transaction is sent.'}
         </p>

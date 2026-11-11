@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useNetworkStats, useSocketConnected } from '../lib/socket';
 import { fmtCompact, fmtInt, fmtUsd, shortAddr } from '../lib/format';
-import { NodeField } from '../components/NodeField';
+import { LogoMark } from '../components/Logo';
 import { Footer } from '../components/Nav';
 
 export interface Treasury {
@@ -15,6 +15,29 @@ export interface Treasury {
 interface SwarmView {
   candidates: { nodeId: string; model: string; gpu?: string; vramGb: number; ring: string | null }[];
   rings: { swarmId: string; model: string; status: string; busy: boolean; tokS?: number; stages: { nodeId: string; lo: number; hi: number; head: boolean }[] }[];
+}
+
+/** One fan per online node (capped), spinning while busy. Only real counts, never decoration. */
+function FanField({ total, busy, connected }: { total: number; busy: number; connected: boolean }) {
+  const cap = 96;
+  const n = Math.min(total, cap);
+  if (!n) {
+    return (
+      <div className="fan-field-empty">
+        <LogoMark size={56} />
+        <span>{connected ? 'No nodes online yet. The first one to join appears here.' : 'Live nodes appear here when the network is reachable.'}</span>
+        <Link to="/earn" className="btn btn-ghost btn-sm">Run a node</Link>
+      </div>
+    );
+  }
+  return (
+    <div className="fan-field" aria-label={`${total} nodes online, ${busy} serving`}>
+      {Array.from({ length: n }, (_, i) => (
+        <span key={i} className={i < busy ? '' : 'idle'}><LogoMark size={n > 48 ? 22 : 34} spin={i < busy} /></span>
+      ))}
+      {total > cap && <span className="small muted">+{fmtInt(total - cap)}</span>}
+    </div>
+  );
 }
 
 function Swarms({ v }: { v: SwarmView | null }) {
@@ -84,21 +107,21 @@ export default function Network() {
     <>
       <div className="page wrap">
         <div className="page-head">
-          <div className="eyebrow">network</div>
-          <h1>The tide, <em>live</em>.</h1>
-          <p>Every node, job and token flowing through Tide right now. Updates every few seconds from the orchestrator.</p>
+          <div className="kicker">Network</div>
+          <h1>Every node, <em>live.</em></h1>
+          <p>What the network is doing right now, straight from the orchestrator. Each fan below is a real node; it spins while it serves.</p>
         </div>
 
         <div className="net-hero">
-          <NodeField height={320} seed={11} />
-          <div className="overlay">
-            <div className="row" style={{ gap: 8, marginBottom: 10 }}>
-              <span className={`dot${connected ? '' : ' off'}`} />
-              <span className="mono tiny muted">{connected ? 'LIVE' : 'RECONNECTING'}</span>
+          <div>
+            <div className="row" style={{ gap: 10, marginBottom: 14 }}>
+              <span className={`led${connected && stats?.nodesOnline ? '' : ' off'}`} />
+              <span className="small muted">{connected ? 'Connected to the orchestrator' : 'Network unreachable'}</span>
             </div>
             <div className="v">{stats ? fmtInt(stats.nodesOnline) : '—'}</div>
-            <div className="muted small">nodes online</div>
+            <div className="muted">nodes online</div>
           </div>
+          <FanField total={stats?.nodesOnline ?? 0} busy={stats?.busy ?? 0} connected={connected} />
         </div>
 
         <div className="grid grid-4">
@@ -131,7 +154,7 @@ export default function Network() {
             <div className="card-head">
               <div>
                 <h3>Payouts</h3>
-                <p className="small muted">Every paid token splits 70% to the node that served it, 5% to the referrer, and the rest to Tide.</p>
+                <p className="small muted">Every paid token splits 70% to the node that served it, 5% to the referrer, and the rest to Whir.</p>
               </div>
             </div>
             <div className="grid grid-2" style={{ gap: 10 }}>
@@ -148,11 +171,11 @@ export default function Network() {
         <div className="card" style={{ marginTop: 18 }}>
           <div className="row-between">
             <div>
-              <h3>Add your GPU to the tide</h3>
+              <h3>Add your computer to the network</h3>
               <p className="small muted">Run a browser node in one click, or a native node with Ollama, llama.cpp or vLLM.</p>
             </div>
             <div className="row">
-              <Link to="/earn" className="btn btn-foam">Start earning</Link>
+              <Link to="/earn" className="btn btn-ink">Start earning</Link>
               <Link to="/docs#nodes" className="btn btn-ghost">Node docs</Link>
             </div>
           </div>

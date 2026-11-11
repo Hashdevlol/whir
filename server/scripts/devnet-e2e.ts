@@ -28,7 +28,7 @@ console.log('treasury SOL', (await conn.getBalance(treasury.publicKey)) / LAMPOR
 const mint = await createMint(conn, treasury, treasury.publicKey, null, 6);
 console.log('test USDC mint', mint.toBase58());
 
-process.env.TIDE_DB = join(mkdtempSync(join(tmpdir(), 'tide-devnet-')), 't.db');
+process.env.WHIR_DB = join(mkdtempSync(join(tmpdir(), 'whir-devnet-')), 't.db');
 process.env.TREASURY_WALLET_KEY = bs58.encode(treasury.secretKey);
 process.env.DEPOSIT_WALLET_KEY = randomBytes(32).toString('hex');
 process.env.USDC_MINT = mint.toBase58();

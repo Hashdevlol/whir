@@ -1,7 +1,7 @@
 /**
  * Current mode: join a swarm that serves one large model split across several GPUs.
  *
- *   tide-node --mode current --token tnt_… --current-dir ~/tide/current --model-dir /models/m25 \
+ *   whir-node --mode current --token tnt_… --current-dir ~/whir/current --model-dir /models/m25 \
  *             --sidecar ~/bin/sidecar [--public-ip 1.2.3.4] [--vram-mb 30000] [--dry-run]
  *
  * Lifecycle (server side: server/src/swarm.ts):
@@ -96,7 +96,7 @@ export async function runCurrentNode(args: Record<string, string>, log: (s: stri
   }
   const keyPath = args.key ?? process.env.SHARD_NODE_KEY ?? join(homedir(), '.shard_node_key');
   const id = loadIdentity(keyPath);
-  const work = join(tmpdir(), `tide-current-${id.peerId.slice(-8)}`);
+  const work = join(tmpdir(), `whir-current-${id.peerId.slice(-8)}`);
   mkdirSync(work, { recursive: true });
   const libp2pKeyPath = join(work, 'libp2p.key');
   writeFileSync(libp2pKeyPath, id.libp2pKey, { mode: 0o600 });
@@ -141,9 +141,9 @@ export async function runCurrentNode(args: Record<string, string>, log: (s: stri
   };
 
   const announce = () => {
-    const sig = sign(null, Buffer.from(`tide-swarm-announce:${socket.id}`), id.priv).toString('base64');
+    const sig = sign(null, Buffer.from(`whir-swarm-announce:${socket.id}`), id.priv).toString('base64');
     socket.emit('node:announce', {
-      model: args.model ?? 'tide-swarm', pubkey: id.pubB64, sig, addrs: [addr],
+      model: args.model ?? 'whir-swarm', pubkey: id.pubB64, sig, addrs: [addr],
       cap: { free_vram_mb: vram.free, subnet, gpu: vram.gpu, ...(args['up-mbps'] ? { up_mbps: Number(args['up-mbps']) } : {}) },
     }, (r: { ok: boolean; nodeId?: string; reason?: string }) => {
       if (!r.ok) { warn(`announce refused: ${r.reason}`); process.exit(2); }

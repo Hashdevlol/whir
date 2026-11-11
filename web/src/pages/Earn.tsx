@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { NODE_SHARE } from '@tide/shared';
+import { NODE_SHARE } from '@whir/shared';
 import { useAuth } from '../lib/auth';
-import { api, errMsg, apiOrigin } from '../lib/api';
+import { api, errMsg, nodeOrigin } from '../lib/api';
 import { useNodeStatus } from '../lib/socket';
 import { duration, fmtDate, fmtInt, fmtUsd, timeAgo } from '../lib/format';
 import {
@@ -27,8 +27,8 @@ export default function Earn() {
     <>
       <div className="page wrap">
         <div className="page-head">
-          <div className="eyebrow">earn</div>
-          <h1>Put your GPU in the <em>current</em>.</h1>
+          <div className="kicker">Earn</div>
+          <h1>Let your computer <em>whir.</em></h1>
           <p>Serve open models to the network and earn USDC for every token. Nodes earn <b className="foam">{Math.round(NODE_SHARE * 100)}%</b> of what users pay.</p>
         </div>
 
@@ -98,7 +98,7 @@ function BrowserTab({ signedIn, earnings }: { signedIn: boolean; earnings: Earni
               <div>
                 <div className="big">{PHASE_LABEL[node.phase]}{online && node.busy ? ' · serving a job' : ''}</div>
                 <div className="small muted mono">
-                  {node.model ? `${modelInfo?.label ?? node.model} · Tide Lite` : 'Tide Lite · Qwen3 over WebGPU'}
+                  {node.model ? `${modelInfo?.label ?? node.model} · Whir Lite` : 'Whir Lite · Qwen3 over WebGPU'}
                   {node.nodeId ? ` · ${node.nodeId}` : ''}
                 </div>
               </div>
@@ -123,7 +123,7 @@ function BrowserTab({ signedIn, earnings }: { signedIn: boolean; earnings: Earni
                   {BROWSER_MODELS.map((m) => <option key={m.id} value={m.id}>{m.label} · {m.download} download · ~{(m.vramMB / 1024).toFixed(1)} GB VRAM</option>)}
                 </select>
               </label>
-              <p className="small muted">The model downloads once and is cached by your browser. Your node serves <b>Tide Lite</b> chats; you only earn for jobs you complete.</p>
+              <p className="small muted">The model downloads once and is cached by your browser. Your node serves <b>Whir Lite</b> chats; you only earn for jobs you complete.</p>
             </div>
           )}
 
@@ -140,7 +140,7 @@ function BrowserTab({ signedIn, earnings }: { signedIn: boolean; earnings: Earni
 
           {running && (
             <div className="notice warn" style={{ marginTop: 16 }}>
-              Keep this tab open and visible. Browsers throttle background tabs — you can use other Tide pages in this tab, but closing it takes your node offline.
+              Keep this tab open and visible. Browsers throttle background tabs — you can use other Whir pages in this tab, but closing it takes your node offline.
             </div>
           )}
         </div>
@@ -182,7 +182,7 @@ const BACKENDS = [
   { id: 'ollama', label: 'Ollama', args: '--base-model qwen3:8b', note: 'Default. Install Ollama and pull the model first: ollama pull qwen3:8b' },
   { id: 'openai', label: 'llama.cpp / LM Studio / vLLM', args: '--backend openai --upstream http://127.0.0.1:8080/v1 --upstream-model <id>', note: 'Any OpenAI-compatible server. Replace <id> with the model id your server exposes.' },
   { id: 'image', label: 'Images (ComfyUI)', args: '--mode image --comfy http://127.0.0.1:8188 --comfy-ckpt <checkpoint.safetensors>', note: 'Serve the image studio from ComfyUI. Paid per image (70% of 10 credits). Use --comfy-workflow <api.json> for Flux or any custom graph.' },
-  { id: 'mock', label: 'Mock (testing)', args: '--backend mock', note: 'Serves the tide-dev mock model — for testing the network without a GPU.' },
+  { id: 'mock', label: 'Mock (testing)', args: '--backend mock', note: 'Serves the whir-dev mock model — for testing the network without a GPU.' },
 ];
 
 function MachineTab({ signedIn }: { signedIn: boolean }) {
@@ -215,7 +215,7 @@ function MachineTab({ signedIn }: { signedIn: boolean }) {
   };
 
   const b = BACKENDS.find((x) => x.id === backend)!;
-  const cmd = `npx tsx node/src/index.ts --token ${fresh ?? '<your tnt_ token>'} --url ${apiOrigin()} ${b.args}`;
+  const cmd = `npx tsx node/src/index.ts --token ${fresh ?? '<your tnt_ token>'} --url ${nodeOrigin()} ${b.args}`;
 
   return (
     <div className="stack" style={{ gap: 18 }}>
@@ -251,14 +251,14 @@ function MachineTab({ signedIn }: { signedIn: boolean }) {
 
         <div className="card stack">
           <h3>2 · Run the node</h3>
-          <p className="small muted">From a checkout of the Tide repo (Node.js 22+). Your node benchmarks itself, then joins the network and serves <b>Tide Max</b> jobs.</p>
+          <p className="small muted">From a checkout of the Whir repo (Node.js 22+). Your node benchmarks itself, then joins the network and serves <b>Whir Max</b> jobs.</p>
           <div className="cmd-tabs">
             {BACKENDS.map((x) => (
               <button key={x.id} className={`btn btn-xs ${backend === x.id ? 'btn-foam' : 'btn-ghost'}`} onClick={() => setBackend(x.id)}>{x.label}</button>
             ))}
           </div>
           <CodeBlock code={cmd} />
-          <p className="tiny muted">{b.note} Add <code>--save</code> to remember options in <code>~/.tide-node.json</code>.</p>
+          <p className="tiny muted">{b.note} Add <code>--save</code> to remember options in <code>~/.whir-node.json</code>.</p>
         </div>
       </div>
 

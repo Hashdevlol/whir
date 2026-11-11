@@ -11,17 +11,17 @@ import { sign } from 'node:crypto';
 import type { AddressInfo } from 'node:net';
 import { io as ioc, type Socket } from 'socket.io-client';
 
-process.env.TIDE_DB = join(mkdtempSync(join(tmpdir(), 'tide-swarm-')), 't.db');
-process.env.TIDE_SWARM_PROFILE = JSON.stringify({ n_layers: 24, layer_vram_mb: 2000, kv_mb_per_layer: 100, layer_ms_base: 0.5, reserve_mb: 1000, head_reserve_mb: 2000, tail_reserve_mb: 1000, cap_layers: 12, head_layer_ms_mult: 1.3 });
-process.env.TIDE_SWARM_LAYERS = '24';
+process.env.WHIR_DB = join(mkdtempSync(join(tmpdir(), 'whir-swarm-')), 't.db');
+process.env.WHIR_SWARM_PROFILE = JSON.stringify({ n_layers: 24, layer_vram_mb: 2000, kv_mb_per_layer: 100, layer_ms_base: 0.5, reserve_mb: 1000, head_reserve_mb: 2000, tail_reserve_mb: 1000, cap_layers: 12, head_layer_ms_mult: 1.3 });
+process.env.WHIR_SWARM_LAYERS = '24';
 process.env.SWARM_FORM_DEBOUNCE_MS = '100';
 
-const { createTideServer } = await import('../src/app.ts');
+const { createWhirServer } = await import('../src/app.ts');
 const { announceMessage } = await import('../src/swarm.ts');
 const { db } = await import('../src/db.ts');
 const { newNodeKey, ReceiptSigner } = await import('../../node/src/receipt.ts');
 
-const server = createTideServer();
+const server = createWhirServer();
 await new Promise<void>((r) => server.http.listen(0, '127.0.0.1', () => r()));
 const BASE = `http://127.0.0.1:${(server.http.address() as AddressInfo).port}`;
 const sockets: Socket[] = [];
@@ -64,7 +64,7 @@ async function fakeNode(name: string, vram: number, subnet: string): Promise<Fak
     s.emit('swarm:job_complete', { jobId: j.jobId, response: words.join(''), tokensGenerated: words.length, receipts: signers.map((x) => x.finalize()) });
   });
   const sig = sign(null, Buffer.from(announceMessage(s.id!)), n.key.privateKey).toString('base64');
-  const ack: any = await s.emitWithAck('node:announce', { model: 'tide-swarm', pubkey: n.key.pubkeyB64, sig, cap: { free_vram_mb: vram, subnet } });
+  const ack: any = await s.emitWithAck('node:announce', { model: 'whir-swarm', pubkey: n.key.pubkeyB64, sig, cap: { free_vram_mb: vram, subnet } });
   assert.ok(ack.ok, JSON.stringify(ack));
   n.nodeId = ack.nodeId;
   fleet.push(n);
@@ -77,7 +77,7 @@ function chat(s: Socket, content: string) {
     s.on('job:token', (m) => { if (m.jobId === out.ack?.jobId) out.text += m.token; });
     s.once('job:complete', (m) => { out.done = m; resolve(out); });
     s.once('job:error', (m) => { out.error = m; resolve(out); });
-    s.emitWithAck('job:submit', { messages: [{ role: 'user', content }], model: 'tide-swarm' }).then((a) => { out.ack = a; if (a.error) resolve(out); });
+    s.emitWithAck('job:submit', { messages: [{ role: 'user', content }], model: 'whir-swarm' }).then((a) => { out.ack = a; if (a.error) resolve(out); });
   });
 }
 
@@ -88,7 +88,7 @@ test('announce requires a node token and a valid key signature', async () => {
   sockets.push(s);
   await new Promise<void>((r) => s.on('connect', () => r()));
   const k = newNodeKey();
-  const bad: any = await s.emitWithAck('node:announce', { model: 'tide-swarm', pubkey: k.pubkeyB64, sig: sign(null, Buffer.from('other'), k.privateKey).toString('base64'), cap: { free_vram_mb: 24000, subnet: '10.9.9' } });
+  const bad: any = await s.emitWithAck('node:announce', { model: 'whir-swarm', pubkey: k.pubkeyB64, sig: sign(null, Buffer.from('other'), k.privateKey).toString('base64'), cap: { free_vram_mb: 24000, subnet: '10.9.9' } });
   assert.equal(bad.ok, false);
   assert.match(bad.reason, /signature/);
   s.close();
@@ -98,7 +98,7 @@ test('ring forms via shard.plan, serves a job, receipts verify, stages paid by l
   await fakeNode('gpu-a', 24000, '10.0.1');
   await fakeNode('gpu-b', 24000, '10.0.2');
   await fakeNode('gpu-c', 24000, '10.0.3');
-  await until(() => server.orch.modelAvailability('tide-swarm') === 1);
+  await until(() => server.orch.modelAvailability('whir-swarm') === 1);
   const inRing = fleet.filter((f) => f.assign);
   assert.ok(inRing.length >= 2, 'at least two stages');
   const lay = inRing.map((f) => f.assign!).sort((a, b) => a.lo - b.lo).map((a) => [a.lo, a.hi]);
@@ -151,7 +151,7 @@ test('a stage leaving dissolves the ring; the pool re-forms without it', async (
   const leaver = fleet.find((f) => f.assign && !f.assign.head)!;
   leaver.s.close();
   fleet.splice(fleet.indexOf(leaver), 1);
-  await until(() => server.orch.modelAvailability('tide-swarm') === 1 && !fleet.some((f) => f.assign && f.assign.peers.some((p) => p.nodeId === leaver.nodeId)), 10000);
+  await until(() => server.orch.modelAvailability('whir-swarm') === 1 && !fleet.some((f) => f.assign && f.assign.peers.some((p) => p.nodeId === leaver.nodeId)), 10000);
   const ids = new Set(fleet.filter((f) => f.assign).map((f) => f.nodeId));
   assert.ok(!ids.has(leaver.nodeId));
 });

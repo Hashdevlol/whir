@@ -1,13 +1,13 @@
-Current — Tide's sharded inference engine
-Copyright 2026 Tide contributors
+Current — Whir's sharded inference engine
+Copyright 2026 Whir contributors
 
 This product is a derivative work of Shard (https://github.com/leyten/shard),
 Copyright 2026 leyten, licensed under the Apache License, Version 2.0, forked at
 commit fcf728096948c7686bcf0897e9acb75d1abda1d5.
 
-Modifications made for Tide:
-  - README.md: project renamed to "Current", Tide integration notes and attribution added.
-  - pyproject.toml: distribution renamed to "tide-current"; description updated.
+Modifications made for Whir:
+  - README.md: project renamed to "Current", Whir integration notes and attribution added.
+  - pyproject.toml: distribution renamed to "whir-current"; description updated.
   - The Python import package name ("shard") is intentionally unchanged.
 
 The original NOTICE of Shard follows, unmodified.

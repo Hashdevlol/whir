@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import type { ChatMessage } from '@tide/shared';
+import type { ChatMessage } from '@whir/shared';
 import { db, now } from './db.ts';
 
 export const STRIKE_LIMIT = 5;
