@@ -22,23 +22,31 @@ export function useReveal(root: RefObject<HTMLElement | null>, deps: unknown[] =
  * Calls `fn(p)` every frame with the scroll progress of `ref` through the viewport:
  * 0 when its top meets the viewport bottom (or top, with `pinned`), 1 when its bottom leaves.
  */
-export function useScrollProgress(ref: RefObject<HTMLElement | null>, fn: (p: number, dt: number) => void, pinned = false) {
+export function useScrollProgress(ref: RefObject<HTMLElement | null>, fn: (p: number, dt: number) => void, pinned = false, continuous = pinned) {
   const cb = useRef(fn);
   cb.current = fn;
   useEffect(() => {
-    let raf = 0, last = performance.now();
+    let raf = 0, last = performance.now(), visible = false, lastY = NaN;
     const tick = (t: number) => {
       const el = ref.current;
-      if (el) {
+      // non-continuous effects only depend on scroll position: skip layout reads while it hasn't moved
+      const y = window.scrollY;
+      if (el && (continuous || y !== lastY)) {
+        lastY = y;
         const r = el.getBoundingClientRect();
         const vh = window.innerHeight;
         const p = pinned ? -r.top / Math.max(1, r.height - vh) : (vh - r.top) / (vh + r.height);
         cb.current(Math.min(1, Math.max(0, p)), Math.min(64, t - last));
       }
       last = t;
-      raf = requestAnimationFrame(tick);
+      raf = visible ? requestAnimationFrame(tick) : 0;
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [ref, pinned]);
+    // only animate while the element is on screen
+    const io = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (visible && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+    });
+    if (ref.current) io.observe(ref.current);
+    return () => { io.disconnect(); cancelAnimationFrame(raf); };
+  }, [ref, pinned, continuous]);
 }

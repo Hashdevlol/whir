@@ -32,21 +32,6 @@ const HAIKU = ['Fans hum through the night,', "a stranger's question answered,",
 function HeroWindow() {
   const ref = useRef<HTMLDivElement>(null);
   const win = useRef<HTMLDivElement>(null);
-  const [chars, setChars] = useState(0);
-  const total = HAIKU.join('\n').length;
-
-  useEffect(() => {
-    if (reducedMotion()) { setChars(total); return; }
-    let i = 0, t: ReturnType<typeof setTimeout>;
-    const step = () => {
-      i += 1 + Math.round(Math.random());
-      setChars(Math.min(total, i));
-      if (i < total) t = setTimeout(step, 34 + Math.random() * 40);
-    };
-    t = setTimeout(step, 1100);
-    return () => clearTimeout(t);
-  }, [total]);
-
   useScrollProgress(ref, (p) => {
     if (!win.current || reducedMotion()) return;
     const k = Math.min(1, p / 0.42);                  // flattens over the first part of the scroll
@@ -54,9 +39,8 @@ function HeroWindow() {
     win.current.style.transform = `perspective(1800px) rotateX(${(1 - e) * 14}deg) scale(${0.94 + e * 0.06})`;
   });
 
-  let left = chars;
-  const shown = HAIKU.map((l) => { const s = l.slice(0, Math.max(0, left)); left -= l.length + 1; return s; });
-  const done = chars >= total;
+  let at = 1.1;                                       // seconds: each line types after the previous one
+  const lines = HAIKU.map((l) => { const d = l.length * 0.045; const o = { l, at, d, n: l.length }; at += d + 0.12; return o; });
 
   return (
     <div className="hero-stage" ref={ref}>
@@ -71,8 +55,10 @@ function HeroWindow() {
         <div className="hw-main">
           <div className="hw-u">Write a haiku about a computer that never sleeps.</div>
           <div className="hw-a">
-            <div className="hw-who"><LogoMark size={18} spin={!done} /> Whir Max</div>
-            {shown.map((l, i) => <p key={i}>{l}{!done && l.length > 0 && (i === 2 || shown[i + 1] === '') ? <span className="caret" /> : null}</p>)}
+            <div className="hw-who"><LogoMark size={18} /> Whir Max</div>
+            {lines.map((x) => (
+              <p key={x.l}><span className="type" style={{ animationDelay: `${x.at}s`, animationDuration: `${x.d}s`, ['--n' as string]: x.n }}>{x.l}</span></p>
+            ))}
           </div>
           <div className="hw-composer"><span>Message Whir…</span><i /></div>
         </div>
@@ -182,11 +168,11 @@ export default function Home() {
             {live ? (nodes ? `${fmtInt(nodes)} ${nodes === 1 ? 'node' : 'nodes'} online` : 'Network online') : 'Network status'}
             <span className="chev">›</span>
           </Link>
-          <Lines as="h1" lines={['Spare power, shared.']} className="hero-h1" />
-          <p className="hero-sub" data-reveal>
+          <h1 className="hero-h1">Spare power, shared.</h1>
+          <p className="hero-sub">
             AI chat, image creation and an OpenAI&#8209;compatible API, served by everyday computers. Run a node and keep {NODE}% of what it serves.
           </p>
-          <div className="hero-cta" data-reveal>
+          <div className="hero-cta">
             <Link to="/chat" className="btn btn-ink btn-lg">Start chatting</Link>
             <Link to="/earn" className="btn btn-text btn-lg">Run a node ›</Link>
           </div>

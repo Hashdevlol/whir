@@ -84,10 +84,10 @@ export function Footer() {
             <Link className="brand" to="/" aria-label="Whir home"><Wordmark size={20} /></Link>
             <p className="footer-blurb">AI served by everyday computers. Open models, priced per token. Nothing you type is stored.</p>
           </div>
-          <div><h5>Use</h5><ul><li><Link to="/chat">Chat</Link></li><li><Link to="/create">Create</Link></li><li><Link to="/pricing">Pricing</Link></li><li><Link to="/docs">API</Link></li></ul></div>
-          <div><h5>Earn</h5><ul><li><Link to="/earn">Run a node</Link></li><li><Link to="/docs#nodes">Node docs</Link></li><li><Link to="/settings#account">Referrals</Link></li></ul></div>
-          <div><h5>Network</h5><ul><li><Link to="/network">Live status</Link></li><li><Link to="/network#swarms">Swarms</Link></li><li><Link to="/network#economics">Payouts</Link></li></ul></div>
-          <div><h5>Help</h5><ul><li><Link to="/pricing#faq">FAQ</Link></li><li><Link to="/settings#keys">API keys</Link></li><li><Link to="/settings">Settings</Link></li></ul></div>
+          <div><h2>Use</h2><ul><li><Link to="/chat">Chat</Link></li><li><Link to="/create">Create</Link></li><li><Link to="/pricing">Pricing</Link></li><li><Link to="/docs">API</Link></li></ul></div>
+          <div><h2>Earn</h2><ul><li><Link to="/earn">Run a node</Link></li><li><Link to="/docs#nodes">Node docs</Link></li><li><Link to="/settings#account">Referrals</Link></li></ul></div>
+          <div><h2>Network</h2><ul><li><Link to="/network">Live status</Link></li><li><Link to="/network#swarms">Swarms</Link></li><li><Link to="/network#economics">Payouts</Link></li></ul></div>
+          <div><h2>Help</h2><ul><li><Link to="/pricing#faq">FAQ</Link></li><li><Link to="/settings#keys">API keys</Link></li><li><Link to="/settings">Settings</Link></li></ul></div>
         </div>
         <div className="fine">
           <span className="row" style={{ gap: 8 }}><LogoMark size={14} /> © 2026 Whir</span>

@@ -14,9 +14,10 @@ export function LogoMark({ size = 22, invert = false, spin = false }: { size?: n
   const disc = invert ? '#FFFFFF' : '#1D1D1F';
   const blade = invert ? '#1D1D1F' : '#FFFFFF';
   return (
-    <svg viewBox="10 10 80 80" width={size} height={size} aria-hidden="true" className="mark-svg">
+    // the disc is round, so spinning the whole <svg> looks identical and stays on the compositor
+    <svg viewBox="10 10 80 80" width={size} height={size} aria-hidden="true" className={spin ? 'mark-svg spinning' : 'mark-svg'}>
       <circle cx="50" cy="50" r="40" fill={disc} />
-      <g className={spin ? 'blades spinning' : 'blades'}><Blades fill={blade} /></g>
+      <Blades fill={blade} />
     </svg>
   );
 }

@@ -41,6 +41,7 @@ export function App() {
     <>
       <ScrollManager />
       <Nav full={pathname === '/chat'} />
+      <main>
       <Suspense fallback={<div className="page wrap"><span className="spinner" /></div>}>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -55,6 +56,7 @@ export function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      </main>
       <SignInModal />
     </>
   );
