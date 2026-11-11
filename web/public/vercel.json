@@ -35,6 +35,10 @@
     {
       "source": "/r/:code",
       "destination": "/index.html"
+    },
+    {
+      "source": "/((?!assets/|api/|v1/).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -55,6 +59,13 @@
           "value": "noindex, nofollow"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/api",
+      "destination": "/docs",
+      "permanent": false
     }
   ]
 }

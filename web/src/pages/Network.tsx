@@ -118,7 +118,7 @@ export default function Network() {
               <span className={`led${connected && stats?.nodesOnline ? '' : ' off'}`} />
               <span className="small muted">{connected ? 'Connected to the orchestrator' : 'Network unreachable'}</span>
             </div>
-            <div className="v">{stats ? fmtInt(stats.nodesOnline) : '—'}</div>
+            <div className={stats ? 'v' : 'v unknown'}>{stats ? fmtInt(stats.nodesOnline) : '—'}</div>
             <div className="muted">nodes online</div>
           </div>
           <FanField total={stats?.nodesOnline ?? 0} busy={stats?.busy ?? 0} connected={connected} />

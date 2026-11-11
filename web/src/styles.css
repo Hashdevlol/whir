@@ -892,3 +892,14 @@ a.tile-b:hover { transform: translateY(-4px) !important; box-shadow: 0 30px 60px
 .hw-a .type { display: inline-block; clip-path: inset(0 100% 0 0); animation-name: type; animation-timing-function: steps(var(--n)); animation-fill-mode: forwards; }
 @keyframes type { to { clip-path: inset(0 0 0 0); } }
 @media (prefers-reduced-motion: reduce) { .hw-a .type { clip-path: none; animation: none; } }
+
+/* inner-page phone fixes */
+.codeblock pre { padding-top: 50px; }
+.net-hero .v.unknown { font-weight: 300; }
+.net-hero .v.unknown { color: var(--line-2); }
+@media (max-width: 600px) {
+  .table { font-size: 13px; }
+  .table th, .table td { padding: 9px 10px; }
+  .docs-body .table td { min-width: 72px; }
+}
+.cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
