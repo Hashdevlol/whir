@@ -4,6 +4,12 @@
 anyone can plug in a GPU and earn for every token it serves, and anyone can use open models through an
 OpenAI-compatible API — no account wall, no prompt storage.
 
+**Live: [whir.network](https://whir.network)** · MIT licensed
+
+In short: people with spare GPUs run `whir-node`; people who want AI chat, image generation or an API
+send prompts to the network. Each job goes to an online node, the user pays per token, and the node
+owner keeps 70% of it.
+
 ```
   chat / API client                          node owners
         │ prompt                                  │
@@ -132,6 +138,10 @@ cd current && python -m pytest tests/test_plan.py tests/test_verify*.py   # Curr
 | ✅ | chat web search (`web_search` tool: Brave with `BRAVE_API_KEY`, otherwise keyless DuckDuckGo) |
 | ✅ | image generation: `/create` studio, `/v1/images/generations`, image nodes via ComfyUI (`--mode image`), 10 credits/image |
 | ✅ | operator console at `/admin` (set `ADMIN_SECRET`) |
+
+## License
+
+[MIT](LICENSE), except `current/`, which stays under Apache-2.0 (see `current/LICENSE` and `current/NOTICE`).
 
 ## Attribution
 

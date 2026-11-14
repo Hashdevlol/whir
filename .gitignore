@@ -10,3 +10,15 @@ data/
 __pycache__/
 .pytest_cache/
 .run/
+
+# secrets — never commit
+.env.*
+!.env.example
+*.pem
+*.key
+*.tok
+*keypair*.json
+*-secrets.json
+id_rsa*
+*.sqlite
+*.sqlite3
